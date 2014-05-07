@@ -117,10 +117,12 @@ file(GLOB mujin_header_files ${CMAKE_CURRENT_SOURCE_DIR}/include/mujinvision/*.h
 install(FILES ${mujin_header_files} ${CMAKE_CURRENT_BINARY_DIR}/include/mujinvision/config.h DESTINATION include/mujinvision)
 
 macro(build_sample name)
+  include_directories(${MujinControllerClient_INCLUDE_DIRS})
+  link_directories(${MujinControllerClient_LIBRARY_DIRS})
   add_executable(${name} ${name}.cpp)
   set_target_properties(${name} PROPERTIES COMPILE_FLAGS "${Boost_CFLAGS}" LINK_FLAGS "")
   add_dependencies(${name} libmujinvision)
-  target_link_libraries (${name} libmujinvision boost_program_options boost_system)
+  target_link_libraries (${name} libmujinvision boost_program_options boost_system ${MujinControllerClient_LIBRARIES})
   install(TARGETS ${name} DESTINATION bin)
 endmacro(build_sample)
 
