@@ -132,6 +132,11 @@ inline static uint64_t GetNanoPerformanceTime()
 }
 #endif
 
+#define FOREACH(it, v) for(typeof((v).begin())it = (v).begin(); it != (v).end(); (it)++)
+#define FOREACH_NOINC(it, v) for(typeof((v).begin())it = (v).begin(); it != (v).end(); )
+
+#define FORIT(it, v) for(it = (v).begin(); it != (v).end(); (it)++)
+
 namespace mujinvision {
 
 #include <mujinvision/config.h>
@@ -322,8 +327,8 @@ struct MUJINVISION_API CameraParameters : public ParametersBase // TODO: auto co
         std::vector<int> roi;
         boost::optional<const ptree&> imageroi_pt = pt.get_child_optional("imageroi");
         if (!!imageroi_pt) {
-            BOOST_FOREACH(const ptree::value_type &rv, *imageroi_pt) {
-                roi.push_back(boost::lexical_cast<double>(rv.second.data()));
+            FOREACH(rv, *imageroi_pt) {
+                roi.push_back(boost::lexical_cast<double>(rv->second.data()));
             }
         }
         minu = roi[0];
@@ -497,13 +502,13 @@ struct MUJINVISION_API DetectedObject : public ParametersBase
         _pt = pt;
         name = pt.get<std::string>("name");
         unsigned int i=0;
-        BOOST_FOREACH(const ptree::value_type &v, pt.get_child("translation_")) {
-            transform.trans[i] = boost::lexical_cast<double>(v.second.data()); // assuming in milimeter
+        FOREACH(v, pt.get_child("translation_")) {
+            transform.trans[i] = boost::lexical_cast<double>(v->second.data()); // assuming in milimeter
             i++;
         }
         i=0;
-        BOOST_FOREACH(const ptree::value_type &v, pt.get_child("quat_")) {
-            transform.rot[i] = boost::lexical_cast<double>(v.second.data());
+        FOREACH(v, pt.get_child("quat_")) {
+            transform.rot[i] = boost::lexical_cast<double>(v->second.data());
             i++;
         }
         confidence = pt.get<double>("confidence");
@@ -589,12 +594,12 @@ struct MUJINVISION_API RegionParameters : public ParametersBase
     {
         _pt = pt;
         instobjectname = pt.get<std::string>("instobjectname");
-        BOOST_FOREACH(const ptree::value_type &cv, pt.get_child("cameranames")) { // TODO: replace BOOST_FOREACH with FOREACH
-            cameranames.push_back(cv.second.data());
+        FOREACH(cv, pt.get_child("cameranames")) {
+            cameranames.push_back(cv->second.data());
         }
         std::vector<double> roi;
-        BOOST_FOREACH(const ptree::value_type &rv, pt.get_child("globalroi3d")) {
-            roi.push_back(boost::lexical_cast<double>(rv.second.data()));
+        FOREACH(rv, pt.get_child("globalroi3d")) {
+            roi.push_back(boost::lexical_cast<double>(rv->second.data()));
         }
         minx = roi[0];
         maxx = roi[1];

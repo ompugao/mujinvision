@@ -45,8 +45,8 @@ public:
             configurationPort = pt.get<unsigned int>("configuration_port");
             statusPort = pt.get<unsigned int>("status_port");
             rpcPort = pt.get<unsigned int>("rpc_port");
-            BOOST_FOREACH(const ptree::value_type &v, pt.get_child("imagestream_connections")) {
-                ConnectionParametersPtr pimagestreamconnection(new ConnectionParameters(v.second));
+            FOREACH(v, pt.get_child("imagestream_connections")) {
+                ConnectionParametersPtr pimagestreamconnection(new ConnectionParameters(v->second));
                 streamerConnections.push_back(pimagestreamconnection);
             }
             useLocalArv = pt.get<bool>("use_local_arv");

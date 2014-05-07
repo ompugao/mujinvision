@@ -50,14 +50,14 @@ MujinVisionManager::MujinVisionManager(ImageSubscriberManagerPtr imagesubscriber
     // set up regions
     std::vector<RegionParametersPtr > vRegionParameters;
     RegionParametersPtr pRegionParameters;
-    BOOST_FOREACH(const ptree::value_type &v, pt.get_child("regions")) {
-        RegionParametersPtr pregionparameters(new RegionParameters(v.second));
+    FOREACH(v, pt.get_child("regions")) {
+        RegionParametersPtr pregionparameters(new RegionParameters(v->second));
         vRegionParameters.push_back(pregionparameters);
         _mNameRegion[pregionparameters->instobjectname] = RegionPtr(new Region(pregionparameters));
     }
     // set up camera parameters
-    BOOST_FOREACH(const ptree::value_type &v, pt.get_child("cameras")) {
-        _mNameCameraParameters[v.first].reset(new CameraParameters(v.second));
+    FOREACH(v, pt.get_child("cameras")) {
+        _mNameCameraParameters[v->first].reset(new CameraParameters(v->second));
     }
     _StartStatusThread(_pVisionServerParameters->statusPort);
     _StartCommandThread(_pVisionServerParameters->rpcPort);
@@ -227,8 +227,8 @@ void MujinVisionManager::_ExecuteUserCommand(const ptree& command_pt, std::strin
         std::vector<std::string> cameranames;
         boost::optional<const ptree&> cameranames_pt(command_pt.get_child_optional("cameranames"));
         if (!!cameranames_pt) {
-            BOOST_FOREACH(const ptree::value_type &v, *cameranames_pt) {
-                cameranames.push_back(v.second.get<std::string>(""));
+            FOREACH(v, *cameranames_pt) {
+                cameranames.push_back(v->second.get<std::string>(""));
             }
         }
         std::vector<DetectedObjectPtr> detectedobjects;
@@ -240,8 +240,8 @@ void MujinVisionManager::_ExecuteUserCommand(const ptree& command_pt, std::strin
         std::vector<std::string> cameranames;
         boost::optional<const ptree&> cameranames_pt(command_pt.get_child_optional("cameranames"));
         if (!!cameranames_pt) {
-            BOOST_FOREACH(const ptree::value_type &v, *cameranames_pt) {
-                cameranames.push_back(v.second.get<std::string>(""));
+            FOREACH(v, *cameranames_pt) {
+                cameranames.push_back(v->second.get<std::string>(""));
             }
         }
         result_pt = StartDetectionLoop(command_pt.get<std::string>("regionname"),
@@ -254,15 +254,15 @@ void MujinVisionManager::_ExecuteUserCommand(const ptree& command_pt, std::strin
         std::vector<std::string> cameranames;
         boost::optional<const ptree&> cameranames_pt(command_pt.get_child_optional("cameranames"));
         if (!!cameranames_pt) {
-            BOOST_FOREACH(const ptree::value_type &v, *cameranames_pt) {
-                cameranames.push_back(v.second.get<std::string>(""));
+            FOREACH(v, *cameranames_pt) {
+                cameranames.push_back(v->second.get<std::string>(""));
             }
         }
         std::vector<DetectedObjectPtr> detectedobjects;
         boost::optional<const ptree&> detectedobjects_pt(command_pt.get_child_optional("detectedobjects"));
         if (!!detectedobjects_pt) {
-            BOOST_FOREACH(const ptree::value_type &v, *detectedobjects_pt) {
-                detectedobjects.push_back(DetectedObjectPtr(new DetectedObject(v.second.get_child(""))));
+            FOREACH(v, *detectedobjects_pt) {
+                detectedobjects.push_back(DetectedObjectPtr(new DetectedObject(v->second.get_child(""))));
             }
         }
         result_pt = SendPointCloudObstacleToController(command_pt.get<std::string>("regionname"),
@@ -273,8 +273,8 @@ void MujinVisionManager::_ExecuteUserCommand(const ptree& command_pt, std::strin
         std::vector<std::string> cameranames;
         boost::optional<const ptree&> cameranames_pt(command_pt.get_child_optional("cameranames"));
         if (!!cameranames_pt) {
-            BOOST_FOREACH(const ptree::value_type &v, *cameranames_pt) {
-                cameranames.push_back(v.second.get<std::string>(""));
+            FOREACH(v, *cameranames_pt) {
+                cameranames.push_back(v->second.get<std::string>(""));
             }
         }
         result_pt = VisualizePointCloudOnController(command_pt.get<std::string>("regionname"),
@@ -289,8 +289,8 @@ void MujinVisionManager::_ExecuteUserCommand(const ptree& command_pt, std::strin
         std::vector<DetectedObjectPtr> detectedobjects;
         boost::optional<const ptree&> detectedobjects_pt(command_pt.get_child_optional("detectedobjects"));
         if (!!detectedobjects_pt) {
-            BOOST_FOREACH(const ptree::value_type &v, *detectedobjects_pt) {
-                detectedobjects.push_back(DetectedObjectPtr(new DetectedObject(v.second.get_child(""))));
+            FOREACH(v, *detectedobjects_pt) {
+                detectedobjects.push_back(DetectedObjectPtr(new DetectedObject(v->second.get_child(""))));
             }
         }
         result_pt = UpdateDetectedObjects(detectedobjects,
@@ -302,8 +302,8 @@ void MujinVisionManager::_ExecuteUserCommand(const ptree& command_pt, std::strin
         std::vector<std::string> cameranames;
         boost::optional<const ptree&> cameranames_pt(command_pt.get_child_optional("cameranames"));
         if (!!cameranames_pt) {
-            BOOST_FOREACH(const ptree::value_type &v, *cameranames_pt) {
-                cameranames.push_back(v.second.get<std::string>(""));
+            FOREACH(v, *cameranames_pt) {
+                cameranames.push_back(v->second.get<std::string>(""));
             }
         }
         result_pt = SyncCameras(command_pt.get<std::string>("regionname"),
@@ -767,7 +767,9 @@ ptree MujinVisionManager::Initialize(const std::string& detectorConfigFilename, 
     _SetStatusMessage("Setting up cameras.");
     std::string name;
     CameraParametersPtr pcameraparameters;
-    BOOST_FOREACH(boost::tie(name, pcameraparameters), _mNameCameraParameters) {
+    FOREACH(it, _mNameCameraParameters) {
+        name = it->first;
+        pcameraparameters = it->second;
         SceneResource::InstObjectPtr camerainstobject;
         if (!scene->FindInstObject(name, camerainstobject)) {
             throw MujinVisionException("Cannot find camera with name: " + name +" on the mujin controller.", MVE_InvalidArgument);
