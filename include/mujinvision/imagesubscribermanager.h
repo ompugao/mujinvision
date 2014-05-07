@@ -21,7 +21,7 @@
 
 namespace mujinvision {
 
-class ImageSubscriberManager
+class MUJINVISION_API ImageSubscriberManager
 {
 public:
     ImageSubscriberManager() {

@@ -25,9 +25,11 @@
 namespace mujinvision
 {
 
+#include <mujinvision/config.h>
+
 /** \brief Base class for subscriber
  */
-class ZmqSubscriber
+class MUJINVISION_API ZmqSubscriber
 {
 public:
     ZmqSubscriber(const std::string& host, const unsigned int port);
@@ -47,7 +49,7 @@ protected:
 
 /** \brief Base class for publisher
  */
-class ZmqPublisher
+class MUJINVISION_API ZmqPublisher
 {
 public:
     ZmqPublisher(const unsigned int port);
@@ -68,7 +70,7 @@ protected:
 
 /** \brief Base class for client
  */
-class ZmqClient
+class MUJINVISION_API ZmqClient
 {
 public:
     ZmqClient(const std::string& host, const unsigned int port);
@@ -88,7 +90,7 @@ protected:
 
 /** \brief Base class for server
  */
-class ZmqServer
+class MUJINVISION_API ZmqServer
 {
 public:
     ZmqServer(const unsigned int port);

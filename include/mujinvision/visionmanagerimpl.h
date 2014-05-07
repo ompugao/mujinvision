@@ -27,7 +27,7 @@
 
 namespace mujinvision {
 
-class MujinVisionManager : public VisionManager
+class MUJINVISION_API MujinVisionManager : public VisionManager
 {
 public:
     MujinVisionManager(ImageSubscriberManagerPtr imagesubscribermanager, DetectorManagerPtr detectormanager, const std::string& visionmanagerConfigurationFilename);
@@ -36,7 +36,7 @@ public:
     void Destroy();
 
     /// \brief vision server parameters
-    struct VisionServerParameters : public ParametersBase
+    struct MUJINVISION_API VisionServerParameters : public ParametersBase
     {
         VisionServerParameters(const ptree& pt)
         {
@@ -125,7 +125,7 @@ public:
     typedef boost::shared_ptr<VisionServerParameters const> VisionServerParametersConstPtr;
     typedef boost::weak_ptr<VisionServerParameters> VisionServerParametersWeakPtr;
 
-    class StatusPublisher : public ZmqPublisher {
+    class MUJINVISION_API StatusPublisher : public ZmqPublisher {
 public:
         StatusPublisher(const unsigned int port) : ZmqPublisher(port)
         {
@@ -141,7 +141,7 @@ public:
     typedef boost::shared_ptr<StatusPublisher const> StatusPublisherConstPtr;
     typedef boost::weak_ptr<StatusPublisher> StatusPublisherWeakPtr;
 
-    class CommandServer : public ZmqServer {
+    class MUJINVISION_API CommandServer : public ZmqServer {
 public:
         CommandServer(const unsigned int port) : ZmqServer(port)
         {

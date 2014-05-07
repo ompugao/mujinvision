@@ -19,6 +19,8 @@
 
 namespace mujinvision {
 
+#include <mujinvision/config.h>
+
 enum MujinVisionErrorCode
 {
     MVE_Failed=0,
@@ -47,7 +49,7 @@ inline const char* GetErrorCodeString(MujinVisionErrorCode error)
     return "";
 };
 
-class MujinVisionException : public std::exception
+class MUJINVISION_API MujinVisionException : public std::exception
 {
 public:
     MujinVisionException() : std::exception(), _s(""), _error(MVE_Failed) {
@@ -87,7 +89,7 @@ private:
 };
 
 /// \brief exception throw when user interrupts the function
-class UserInterruptException : public std::exception
+class MUJINVISION_API UserInterruptException : public std::exception
 {
 public:
     UserInterruptException() : std::exception() {

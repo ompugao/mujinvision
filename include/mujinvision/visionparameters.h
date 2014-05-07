@@ -134,6 +134,8 @@ inline static uint64_t GetNanoPerformanceTime()
 
 namespace mujinvision {
 
+#include <mujinvision/config.h>
+
 using geometry::MathTransform;
 typedef MathTransform<double> Transform;
 using geometry::MathTransformMatrix;
@@ -143,7 +145,7 @@ typedef MathVector<double> Vector;
 using boost::property_tree::ptree;
 
 /// \brief base class of parameters
-struct ParametersBase
+struct MUJINVISION_API ParametersBase
 {
     ParametersBase() {
     }
@@ -248,7 +250,7 @@ protected:
 };
 
 /// \brief ip and port of a connection
-struct ConnectionParameters : public ParametersBase
+struct MUJINVISION_API ConnectionParameters : public ParametersBase
 {
     ConnectionParameters() {
     }
@@ -305,7 +307,7 @@ typedef boost::shared_ptr<DepthImage const> DepthImageConstPtr;
 typedef boost::weak_ptr<DepthImage> DepthImageWeakPtr;
 
 /// \brief information about camera
-struct CameraParameters : public ParametersBase // TODO: auto compute imageroi
+struct MUJINVISION_API CameraParameters : public ParametersBase // TODO: auto compute imageroi
 {
     CameraParameters() {
     }
@@ -388,7 +390,7 @@ typedef boost::shared_ptr<CameraParameters const> CameraParametersConstPtr;
 typedef boost::weak_ptr<CameraParameters> CameraParametersWeakPtr;
 
 /// \brief sensor calibration data
-struct CalibrationData : public ParametersBase
+struct MUJINVISION_API CalibrationData : public ParametersBase
 {
 
     CalibrationData() {
@@ -484,7 +486,7 @@ typedef boost::shared_ptr<CalibrationData const> CalibrationDataConstPtr;
 typedef boost::weak_ptr<CalibrationData> CalibrationDataWeakPtr;
 
 /// \brief information about the detected object
-struct DetectedObject : public ParametersBase
+struct MUJINVISION_API DetectedObject : public ParametersBase
 {
     DetectedObject() {
     }
@@ -578,7 +580,7 @@ typedef boost::shared_ptr<DetectedObject const> DetectedObjectConstPtr;
 typedef boost::weak_ptr<DetectedObject> DetectedObjectWeakPtr;
 
 /// \brief Specifies region where vision system performs detection with a set of cameras
-struct RegionParameters : public ParametersBase
+struct MUJINVISION_API RegionParameters : public ParametersBase
 {
     RegionParameters() {
     }
@@ -655,7 +657,7 @@ typedef boost::shared_ptr<RegionParameters const> RegionParametersConstPtr;
 typedef boost::weak_ptr<RegionParameters> RegionParametersWeakPtr;
 
 /// \brief camera class
-class Camera
+class MUJINVISION_API Camera
 {
 public:
     Camera(const std::string& n, CameraParametersPtr params, CalibrationDataPtr calibdata)
@@ -702,7 +704,7 @@ typedef boost::shared_ptr<Camera const> CameraConstPtr;
 typedef boost::weak_ptr<Camera> CameraWeakPtr;
 
 /// \brief information about the region
-class Region
+class MUJINVISION_API Region
 {
 public:
     Region() {
@@ -765,7 +767,7 @@ typedef boost::weak_ptr<Region> RegionWeakPtr;
 //     DS_Interrupted=2,
 // };
 
-class MujinInterruptable
+class MUJINVISION_API MujinInterruptable
 {
 public:
     MujinInterruptable() {

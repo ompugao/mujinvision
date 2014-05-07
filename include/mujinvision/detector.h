@@ -21,7 +21,7 @@
 
 namespace mujinvision {
 
-class ObjectDetector : public MujinInterruptable
+class MUJINVISION_API ObjectDetector : public MujinInterruptable
 {
 public:
     ObjectDetector() {

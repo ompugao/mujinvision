@@ -21,7 +21,7 @@
 
 namespace mujinvision {
 
-class DetectorManager
+class MUJINVISION_API DetectorManager
 {
 public:
     DetectorManager() {

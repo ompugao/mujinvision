@@ -29,7 +29,7 @@ enum ImageType {
     IT_Any=100,
 };
 
-class ImageSubscriber
+class MUJINVISION_API ImageSubscriber
 {
 public:
     ImageSubscriber() {
@@ -38,7 +38,7 @@ public:
     }
 
     /// \brief User-defined subscriber parameters.
-    class SubscriberParameters;
+    class MUJINVISION_API SubscriberParameters;
 
     virtual void StartCaptureThread() = 0;
 

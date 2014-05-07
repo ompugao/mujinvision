@@ -26,7 +26,7 @@ namespace mujinvision {
 using namespace mujinclient;
 
 /// \brief manages the bin-picking object detection process
-class VisionManager
+class MUJINVISION_API VisionManager
 {
 public:
 
