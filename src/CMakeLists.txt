@@ -54,5 +54,5 @@ endif()
 
 install(TARGETS libmujinvision DESTINATION lib)
 set(MUJIN_VISION_INCLUDE_LOCAL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../include)
-set(LIB_HEADER_FILES ${MUJIN_VISION_INCLUDE_LOCAL_DIR}/mujinvision/*.h)
+file(GLOB LIB_HEADER_FILES ${MUJIN_VISION_INCLUDE_LOCAL_DIR}/mujinvision/*.h)
 install(FILES ${LIB_HEADER_FILES} DESTINATION include/mujinvision)
