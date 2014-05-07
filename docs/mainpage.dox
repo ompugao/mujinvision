@@ -1,0 +1,19 @@
+// -*- coding: utf-8 -*-
+namespace mujinvision
+{
+
+/**
+\~
+\mainpage MUJIN Vision Library
+
+\ref ChangeLog
+
+\page ChangeLog
+
+\section v0_1_0 Version 0.1.0
+
+- Initial version
+
+*/
+
+}

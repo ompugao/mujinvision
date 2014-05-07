@@ -1,0 +1,52 @@
+/** \file config.h
+    \brief Defines MUJIN Vision installation-specific information.
+*/
+#ifndef MUJINVISION_DEFINITIONS_H
+#define MUJINVISION_DEFINITIONS_H
+
+#if defined(_WIN32) || defined(__CYGWIN__) || defined(_MSC_VER)
+  #define MUJINVISION_HELPER_DLL_IMPORT __declspec(dllimport)
+  #define MUJINVISION_HELPER_DLL_EXPORT __declspec(dllexport)
+  #define MUJINVISION_HELPER_DLL_LOCAL
+#else
+  #if __GNUC__ >= 4
+    #define MUJINVISION_HELPER_DLL_IMPORT __attribute__ ((visibility("default")))
+    #define MUJINVISION_HELPER_DLL_EXPORT __attribute__ ((visibility("default")))
+    #define MUJINVISION_HELPER_DLL_LOCAL  __attribute__ ((visibility("hidden")))
+  #else
+    #define MUJINVISION_HELPER_DLL_IMPORT
+    #define MUJINVISION_HELPER_DLL_EXPORT
+    #define MUJINVISION_HELPER_DLL_LOCAL
+  #endif
+#endif
+
+// Now we use the generic helper definitions above to define MUJINVISION_API and MUJINVISION_LOCAL.
+// MUJINVISION_API is used for the public API symbols. It either DLL imports or DLL exports (or does nothing for static build)
+// MUJINVISION_LOCAL is used for non-api symbols.
+#if defined(MUJINVISION_DLL) || defined(MUJINVISION_CORE_DLL) // defined if OpenRAVE is compiled as a DLL
+  #ifdef MUJINVISION_DLL_EXPORTS // defined if we are building the OpenRAVE DLL (instead of using it)
+    #define MUJINVISION_API MUJINVISION_HELPER_DLL_EXPORT
+  #else
+    #define MUJINVISION_API MUJINVISION_HELPER_DLL_IMPORT
+  #endif // MUJINVISION_DLL_EXPORTS
+  #define MUJINVISION_LOCAL MUJINVISION_HELPER_DLL_LOCAL
+#else // MUJINVISION_DLL is not defined: this means OpenRAVE is a static lib.
+  #define MUJINVISION_API
+  #define MUJINVISION_LOCAL
+#endif // MUJINVISION_DLL
+
+#define MUJINVISION_VERSION_MAJOR @MUJINVISION_VERSION_MAJOR@
+#define MUJINVISION_VERSION_MINOR @MUJINVISION_VERSION_MINOR@
+#define MUJINVISION_VERSION_PATCH @MUJINVISION_VERSION_PATCH@
+#define MUJINVISION_VERSION_COMBINED(major, minor, patch) (((major) << 16) | ((minor) << 8) | (patch))
+#define MUJINVISION_VERSION MUJINVISION_VERSION_COMBINED(MUJINVISION_VERSION_MAJOR, MUJINVISION_VERSION_MINOR, MUJINVISION_VERSION_PATCH)
+#define MUJINVISION_VERSION_EXTRACT_MAJOR(version) (((version)>>16)&0xff)
+#define MUJINVISION_VERSION_EXTRACT_MINOR(version) (((version)>>8)&0xff)
+#define MUJINVISION_VERSION_EXTRACT_PATCH(version) (((version))&0xff)
+#define MUJINVISION_VERSION_STRING "@MUJINVISION_VERSION_MAJOR@.@MUJINVISION_VERSION_MINOR@.@MUJINVISION_VERSION_PATCH@"
+#define MUJINVISION_VERSION_STRING_FORMAT(version) boost::str(boost::format("%s.%s.%s")%(MUJINVISION_VERSION_EXTRACT_MAJOR(version))%(MUJINVISION_VERSION_EXTRACT_MINOR(version))%(MUJINVISION_VERSION_EXTRACT_PATCH(version)))
+
+#define MUJINVISION_VERSION_GE(major1, minor1, patch1, major2, minor2, patch2) (MUJINVISION_VERSION_COMBINED(major1, minor1, patch1) >= MUJINVISION_VERSION_COMBINED(major2, minor2, patch2))
+#define MUJINVISION_VERSION_MINIMUM(major, minor, patch) MUJINVISION_VERSION_GE(MUJINVISION_VERSION_MAJOR, MUJINVISION_VERSION_MINOR, MUJINVISION_VERSION_PATCH, major, minor, patch)
+
+#endif
