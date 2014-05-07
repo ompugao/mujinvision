@@ -14,4 +14,4 @@
 include_directories(${MUJINVISION_INCLUDE_LOCAL_DIRS})
 link_directories(${MUJINVISION_LINK_DIRS})
 
-#build_sample(mujinsample)
+build_sample(templateapp)
