@@ -34,7 +34,7 @@ cmake_policy(SET CMP0002 NEW)
 # http://www.cmake.org/cmake/help/cmake-2.6.html#policy:CMP0003
 cmake_policy(SET CMP0003 NEW)
 
-option(OPT_SAMPLES "Build the samples" OFF)
+option(OPT_SAMPLES "Build the samples" ON)
 option(OPT_BUILD_TESTS "Build the tests" OFF)
 option(OPT_BUILD_STATIC "Build static libraries for the library" ON)
 
@@ -120,7 +120,7 @@ macro(build_sample name)
   add_executable(${name} ${name}.cpp)
   set_target_properties(${name} PROPERTIES COMPILE_FLAGS "${Boost_CFLAGS}" LINK_FLAGS "")
   add_dependencies(${name} libmujinvision)
-  target_link_libraries (${name} libmujinvision boost_program_options)
+  target_link_libraries (${name} libmujinvision boost_program_options boost_system)
   install(TARGETS ${name} DESTINATION bin)
 endmacro(build_sample)
 
