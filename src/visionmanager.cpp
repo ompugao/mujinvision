@@ -218,6 +218,8 @@ void MujinVisionManager::_ExecuteUserCommand(const ptree& command_pt, std::strin
                                command_pt.get<std::string>("robotControllerIp"),
                                command_pt.get<unsigned int>("robotControllerPort"),
                                command_pt.get<unsigned int>("binpickingTaskZmqPort"),
+                               command_pt.get<unsigned int>("binpickingTaskHeartbeatPort"),
+                               command_pt.get<double>("binpickingTaskHeartbeatTimeout"),
                                command_pt.get<std::string>("binpickingTaskScenePk"),
                                command_pt.get<std::string>("robotname"),
                                command_pt.get<std::string>("regionname")
@@ -745,7 +747,7 @@ ptree MujinVisionManager::_GetResultPtree(ManagerStatus status)
     return pt;
 }
 
-ptree MujinVisionManager::Initialize(const std::string& detectorConfigFilename, const std::string& imagesubscriberConfigFilename, const std::string& controllerIp, const unsigned int controllerPort, const std::string& controllerUsernamePass, const std::string& robotControllerIp, const unsigned int robotControllerPort, const unsigned int binpickingTaskZmqPort, const std::string& binpickingTaskScenePk, const std::string& robotname, const std::string& regionname)
+ptree MujinVisionManager::Initialize(const std::string& detectorConfigFilename, const std::string& imagesubscriberConfigFilename, const std::string& controllerIp, const unsigned int controllerPort, const std::string& controllerUsernamePass, const std::string& robotControllerIp, const unsigned int robotControllerPort, const unsigned int binpickingTaskZmqPort, const unsigned int binpickingTaskHeartbeatPort, const double binpickingTaskHeartbeatTimeout, const std::string& binpickingTaskScenePk, const std::string& robotname, const std::string& regionname)
 {
     ptree pt;
 
@@ -756,7 +758,7 @@ ptree MujinVisionManager::Initialize(const std::string& detectorConfigFilename, 
     _SetStatusMessage("Connected to mujin controller at " + url_ss.str());
     SceneResourcePtr scene(new SceneResource(controller,binpickingTaskScenePk));
     _pBinpickingTask = scene->GetOrCreateBinPickingTaskFromName_UTF8("binpickingtask1", TRO_EnableZMQ);
-    _pBinpickingTask->Initialize(robotControllerIp, robotControllerPort, binpickingTaskZmqPort);
+    _pBinpickingTask->Initialize(robotControllerIp, robotControllerPort, binpickingTaskZmqPort, binpickingTaskHeartbeatPort, binpickingTaskHeartbeatTimeout);
 
     // sync region
     _SetStatusMessage("Syncing region.");

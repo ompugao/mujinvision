@@ -165,6 +165,8 @@ public:
                      const std::string& robotControllerIp,
                      const unsigned int robotControllerPort,
                      const unsigned int binpickingTaskZmqPort,
+                     const unsigned int binpickingTaskHeartbeatPort,
+                     const double binpickingTaskHeartbeatTimeout,
                      const std::string& binpickingTaskScenePk,
                      const std::string& robotname,
                      const std::string& regionname
