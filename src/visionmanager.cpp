@@ -573,11 +573,10 @@ void MujinVisionManager::_DetectionThread(const std::string& regionname, const s
             }
             // if min distance is less than max position error, treat it as known object
             if (minDist < _pVisionServerParameters->maxPositionError) {
-                std::cout << "Part " << minIndex << " is known (minDist " << minDist << "), updating its mean position averaging " << _vDetectedCount[minIndex] << " previous detections." << std::endl;
                 _vDetectedCount[minIndex]++;
                 unsigned int numDetections;
                 // only keep track of the last n detection results
-                if (_vDetectedCount[minIndex] < _pVisionServerParameters->numDetectionsToKeep) {
+                if (_vDetectedCount[minIndex] <= _pVisionServerParameters->numDetectionsToKeep) {
                     _vDetectedPositions[minIndex].push_back(position);
                     _vDetectedRotations[minIndex].push_back(rotation);
                     _vDetectedScores[minIndex].push_back(score);
@@ -589,6 +588,9 @@ void MujinVisionManager::_DetectionThread(const std::string& regionname, const s
                     _vDetectedRotations[minIndex][newindex] = rotation;
                     _vDetectedScores[minIndex][newindex] = score;
                 }
+                std::cout << "Part " << minIndex << " is known (minDist " << minDist << "), updating its mean position averaging " << numDetections << " detections." << std::endl;
+
+                // update timestamp
                 _vDetectedTimestamp[minIndex] = timestamp;
                 // update means
                 Vector sumPosition(0,0,0);
@@ -596,6 +598,10 @@ void MujinVisionManager::_DetectionThread(const std::string& regionname, const s
                     sumPosition += _vDetectedPositions[minIndex][j];
                 }
                 _vDetectedMeanPosition[minIndex] = sumPosition * (1.0f/numDetections);
+                std::cout << "Part " << minIndex << " mean position: "
+                          << _vDetectedMeanPosition[minIndex][0] << ", "
+                          << _vDetectedMeanPosition[minIndex][1] << ", "
+                          << _vDetectedMeanPosition[minIndex][2] << std::endl;
                 double minQuatDotProduct = 999;
                 int minQuatIndex = -1;
                 for (unsigned int j=0; j<numDetections; j++) {
@@ -610,6 +616,11 @@ void MujinVisionManager::_DetectionThread(const std::string& regionname, const s
                     }
                 }
                 _vDetectedMeanRotation[minIndex] = _vDetectedRotations[minIndex][minQuatIndex];
+                std::cout << "Part " << minIndex << " mean rotation: "
+                          << _vDetectedMeanRotation[minIndex][0] << ", "
+                          << _vDetectedMeanRotation[minIndex][1] << ", "
+                          << _vDetectedMeanRotation[minIndex][2] << ", "
+                          << _vDetectedMeanRotation[minIndex][3] << std::endl;
                 double sumScore=0;
                 for (unsigned int j=0; j<numDetections; j++) {
                     sumScore += _vDetectedScores[minIndex][j];
