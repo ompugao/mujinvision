@@ -71,6 +71,12 @@ public:
         return DepthImagePtr();
     }
 
+    void WriteColorImage(ColorImageConstPtr colorimage, const std::string& filename) {
+    }
+
+    void WriteDepthImage(DepthImageConstPtr depthimage, const std::string& filename) {
+    }
+
     ImageSubscriberPtr CreateImageSubscriber(const std::string& ip, const unsigned int port, const ptree& params_pt)
     {
         UserImageSubscriberPtr subscriber(new UserImageSubscriber());

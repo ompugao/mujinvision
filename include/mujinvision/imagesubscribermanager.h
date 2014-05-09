@@ -61,6 +61,14 @@ public:
      */
     virtual DepthImagePtr GetDepthImage(const std::string& cameraname, const unsigned int n, unsigned long long& starttime, unsigned long long& endtime) = 0;
 
+    /** \brief Writes color image to disk.
+     */
+    virtual void WriteColorImage(ColorImageConstPtr colorimage, const std::string& filename) = 0;
+
+    /** \brief Writes depth image to disk.
+     */
+    virtual void WriteDepthImage(DepthImageConstPtr depthimage, const std::string& filename) = 0;
+
     /** \brief Creates image susbcriber.
         \param ip ip address of the image subscriber
         \param port port of the image subscriber

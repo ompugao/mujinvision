@@ -286,7 +286,8 @@ void MujinVisionManager::_ExecuteUserCommand(const ptree& command_pt, std::strin
         result_pt = ClearVisualizationOnController();
         result_ss << ParametersBase::GetJsonString("status",result_pt.get<std::string>("status"));
     } else if (command == "SaveSnapshot") {
-        // TODO
+        result_pt = SaveSnapshot(command_pt.get<std::string>("regionname"));
+        result_ss << ParametersBase::GetJsonString("status",result_pt.get<std::string>("status"));
     } else if (command == "UpdateDetectedObjects") {
         std::vector<DetectedObjectPtr> detectedobjects;
         boost::optional<const ptree&> detectedobjects_pt(command_pt.get_child_optional("detectedobjects"));
@@ -297,6 +298,7 @@ void MujinVisionManager::_ExecuteUserCommand(const ptree& command_pt, std::strin
         }
         result_pt = UpdateDetectedObjects(detectedobjects,
                                           command_pt.get<bool>("sendtocontroller"));
+        result_ss << ParametersBase::GetJsonString("status",result_pt.get<std::string>("status"));
     } else if (command == "SyncRegion") {
         result_pt = SyncRegion(command_pt.get<std::string>("regionname"));
         result_ss << ParametersBase::GetJsonString("status",result_pt.get<std::string>("status"));
@@ -400,6 +402,22 @@ void MujinVisionManager::_CommandThread(const unsigned int port)
                         result_ss << "{" << ParametersBase::GetJsonString("status", _vStatusDescriptions[MS_Preempted]) << "}";
                     }
                 }
+                catch (const MujinVisionException& e) {
+                    _SetStatus(MS_Aborted,"",true);
+                    std::cerr << "MujinVisionException " << e.message() << std::endl;
+                    if (e.GetCode() == MVE_CommandNotSupported) {
+                        result_ss << "{" << ParametersBase::GetJsonString("error", e.message()) << "}";
+                    } else if (e.GetCode() == MVE_InvalidArgument) {
+                        result_ss << "{" << ParametersBase::GetJsonString("error", e.message()) << "}";
+                    } else if (e.GetCode() == MVE_ConfigurationFileError) {
+                        result_ss << "{" << ParametersBase::GetJsonString("error", e.message()) << "}";
+                    } else if (e.GetCode() == MVE_ControllerError) {
+                        result_ss << "{" << ParametersBase::GetJsonString("error", e.message()) << "}";
+                    } else {
+                        std::cerr << "Unhandled MujinVisionException, throw. " << std::endl;
+                        throw;
+                    }
+                }
 
                 // send output
                 _mPortCommandServer[port]->Send(result_ss.str());
@@ -412,17 +430,7 @@ void MujinVisionManager::_CommandThread(const unsigned int port)
         catch (const UserInterruptException& ex) {
             throw;
         }
-        catch (const MujinVisionException& e) {
-            _SetStatus(MS_Aborted,"",true);
-            std::cerr << "MujinVisionException " << e.message() << std::endl;
-            if (e.GetCode() == MVE_CommandNotSupported) {
-            } else if (e.GetCode() == MVE_InvalidArgument) {
-            } else if (e.GetCode() == MVE_ConfigurationFileError) {
-            } else if (e.GetCode() == MVE_ControllerError) {
-            } else {
-                throw;
-            }
-        } catch (const mujinclient::MujinException& e) {
+        catch (const mujinclient::MujinException& e) {
             _SetStatus(MS_Aborted,"",true);
             std::cerr << "mujinclient::MujinException " << e.message() << std::endl;
             throw;
@@ -961,6 +969,24 @@ ptree MujinVisionManager::ClearVisualizationOnController()
 
 ptree MujinVisionManager::SaveSnapshot(const std::string& regionname)
 {
+    std::vector<std::string> cameranames;
+    std::vector<std::string> cameranamestobeused = _GetCameraNames(regionname, cameranames);
+    FOREACH(iter,_mNameColorCamera) {
+        std::string colorcameraname = iter->first;
+        if (std::find(cameranamestobeused.begin(), cameranamestobeused.end(), colorcameraname) != cameranamestobeused.end()) {
+            std::stringstream filename_ss;
+            filename_ss << colorcameraname << "_" << GetMilliTime() << ".png";
+            _pImagesubscriberManager->WriteColorImage(_GetColorImage(regionname, colorcameraname), filename_ss.str());
+        }
+    }
+    FOREACH(iter,_mNameDepthCamera) {
+        std::string depthcameraname = iter->first;
+        if (std::find(cameranamestobeused.begin(), cameranamestobeused.end(), depthcameraname) != cameranamestobeused.end()) {
+            std::stringstream filename_ss;
+            filename_ss << depthcameraname << "_" << GetMilliTime() << ".pcd";
+            _pImagesubscriberManager->WriteDepthImage(_GetDepthImage(regionname, depthcameraname), filename_ss.str());
+        }
+    }
     return _GetResultPtree(MS_Succeeded);
 }
 
