@@ -597,16 +597,22 @@ struct MUJINVISION_API RegionParameters : public ParametersBase
         FOREACH(cv, pt.get_child("cameranames")) {
             cameranames.push_back(cv->second.data());
         }
-        std::vector<double> roi;
-        FOREACH(rv, pt.get_child("globalroi3d")) {
-            roi.push_back(boost::lexical_cast<double>(rv->second.data()));
+        boost::optional<const ptree&> globalroi3d_pt(pt.get_child_optional("globalroi3d"));
+        if (!!globalroi3d_pt) {
+            std::vector<double> roi;
+            FOREACH(rv, *globalroi3d_pt) {
+                roi.push_back(boost::lexical_cast<double>(rv->second.data()));
+            }
+            minx = roi[0];
+            maxx = roi[1];
+            miny = roi[2];
+            maxy = roi[3];
+            minz = roi[4];
+            maxz = roi[5];
+            bInitializedRoi = true;
+        } else {
+            bInitializedRoi = false;
         }
-        minx = roi[0];
-        maxx = roi[1];
-        miny = roi[2];
-        maxy = roi[3];
-        minz = roi[4];
-        maxz = roi[5];
     }
 
     virtual ~RegionParameters() {
@@ -617,6 +623,7 @@ struct MUJINVISION_API RegionParameters : public ParametersBase
 
     /// \brief global roi in meter
     double minx,maxx,miny,maxy,minz,maxz;
+    bool bInitializedRoi;
 
     std::string GetJsonString()
     {
@@ -718,12 +725,6 @@ public:
     Region(RegionParametersPtr params)
     {
         pRegionParameters = params;
-        minx = params->minx;
-        maxx = params->maxx;
-        miny = params->miny;
-        maxy = params->maxy;
-        minz = params->minz;
-        maxz = params->maxz;
     }
 
     virtual ~Region() {
@@ -742,10 +743,13 @@ public:
 
     bool IsPointInROI(const double px, const double py, const double pz)
     {
+        if (!pRegionParameters->bInitializedRoi) {
+            throw MujinVisionException("globalroi3d is not initialized!", MVE_Failed);
+        }
         Vector p(px,py,pz);
         Vector v = toRegionTransform*p;
 
-        if (v.x >= minx && v.x <= maxx && v.y >= miny && v.y <= maxy && v.z >= minz && v.z <= maxz) {
+        if (v.x >= pRegionParameters->minx && v.x <= pRegionParameters->maxx && v.y >= pRegionParameters->miny && v.y <= pRegionParameters->maxy && v.z >= pRegionParameters->minz && v.z <= pRegionParameters->maxz) {
             return true;
         } else {
             return false;
@@ -756,7 +760,6 @@ public:
 
 private:
 
-    double minx,maxx,miny,maxy,minz,maxz;
     /// \brief used to transform a point in the world frame to the box frame
     Transform toRegionTransform;
     Transform worldTransform;

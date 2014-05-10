@@ -714,7 +714,20 @@ void MujinVisionManager::_SyncRegion(const std::string& regionname)
         throw MujinVisionException("Region "+regionname+ " is unknown!", MVE_InvalidArgument);
     }
     _mNameRegion[regionname]->SetWorldTransform(_GetTransform(regionname));
-    // TODO: update globalroi3d from mujin controller
+    // update globalroi3d from mujin controller
+    if (!_mNameRegion[regionname]->pRegionParameters->bInitializedRoi) {
+        std::cout << "Computing globalroi3d from mujin controller." << std::endl;
+        BinPickingTaskResource::ResultAABB aabb;
+        _pBinpickingTask->GetAABB(regionname, aabb, "m");
+        _mNameRegion[regionname]->pRegionParameters->minx = 0;
+        _mNameRegion[regionname]->pRegionParameters->maxx = aabb.extents[0]*2;
+        _mNameRegion[regionname]->pRegionParameters->miny = 0;
+        _mNameRegion[regionname]->pRegionParameters->maxy = aabb.extents[1]*2;
+        _mNameRegion[regionname]->pRegionParameters->minz = 0;
+        _mNameRegion[regionname]->pRegionParameters->maxz = aabb.extents[2]*2;
+        _mNameRegion[regionname]->pRegionParameters->bInitializedRoi = true;
+        std::cout << _mNameRegion[regionname]->pRegionParameters->GetJsonString() << std::endl;
+    }
 }
 
 ColorImagePtr MujinVisionManager::_GetColorImage(const std::string& regionname, const std::string& cameraname)
