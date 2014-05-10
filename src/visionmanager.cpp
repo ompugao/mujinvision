@@ -644,18 +644,20 @@ void MujinVisionManager::_DetectionThread(const std::string& regionname, const s
                 _vDetectedMeanScore.push_back(score);
             }
         }
-        // remove old detection results
-        for (unsigned i=_vDetectedPositions.size()-1; i>0; i--) {
-            if (GetMilliTime() - _vDetectedTimestamp[i] > _pVisionServerParameters->timeToRemember) {
-                std::cout << "Part " << i << " has not been seen for " << _pVisionServerParameters->timeToRemember << " ms, removing its records." << std::endl;
-                _vDetectedTimestamp.erase(_vDetectedTimestamp.begin()+i);
-                _vDetectedCount.erase(_vDetectedCount.begin()+i);
-                _vDetectedMeanScore.erase(_vDetectedMeanScore.begin()+i);
-                _vDetectedMeanPosition.erase(_vDetectedMeanPosition.begin()+i);
-                _vDetectedMeanRotation.erase(_vDetectedMeanRotation.begin()+i);
-                _vDetectedPositions.erase(_vDetectedPositions.begin()+i);
-                _vDetectedRotations.erase(_vDetectedRotations.begin()+i);
-                _vDetectedScores.erase(_vDetectedScores.begin()+i);
+        if (_vDetectedPositions.size()>0) {
+            // remove old detection results
+            for (unsigned i=_vDetectedPositions.size()-1; i>0; i--) {
+                if (GetMilliTime() - _vDetectedTimestamp[i] > _pVisionServerParameters->timeToRemember) {
+                    std::cout << "Part " << i << " has not been seen for " << _pVisionServerParameters->timeToRemember << " ms, removing its records." << std::endl;
+                    _vDetectedTimestamp.erase(_vDetectedTimestamp.begin()+i);
+                    _vDetectedCount.erase(_vDetectedCount.begin()+i);
+                    _vDetectedMeanScore.erase(_vDetectedMeanScore.begin()+i);
+                    _vDetectedMeanPosition.erase(_vDetectedMeanPosition.begin()+i);
+                    _vDetectedMeanRotation.erase(_vDetectedMeanRotation.begin()+i);
+                    _vDetectedPositions.erase(_vDetectedPositions.begin()+i);
+                    _vDetectedRotations.erase(_vDetectedRotations.begin()+i);
+                    _vDetectedScores.erase(_vDetectedScores.begin()+i);
+                }
             }
         }
 
@@ -692,20 +694,69 @@ mujinvision::Transform MujinVisionManager::_GetTransform(const std::string& inst
     return mujinvision::Transform(Vector( t.quaternion[0],t.quaternion[1],t.quaternion[2], t.quaternion[3]), Vector(t.translate[0]/1000.0,t.translate[1]/1000.0, t.translate[2]/1000.0)); // in m
 }
 
-void MujinVisionManager::_SyncCamera(const std::string& cameraname)
+void MujinVisionManager::_SyncCamera(const std::string& regionname, const std::string& cameraname)
 {
     if (_mNameCamera.find(cameraname) == _mNameCamera.end()) {
         throw MujinVisionException("Camera "+cameraname+ " is unknown!", MVE_InvalidArgument);
     }
-    _mNameCamera[cameraname]->SetWorldTransform(_GetTransform(cameraname));
+    Transform O_T_C = _GetTransform(cameraname); // camera transform in world frame
+    _mNameCamera[cameraname]->SetWorldTransform(O_T_C);
     std::cout << "setting camera transform to: " << std::endl;
-    TransformMatrix t(_mNameCamera[cameraname]->GetWorldTransform());
-    for (unsigned int r = 0; r < 3; ++r) {
-        for (unsigned int c = 0; c < 3; ++c) {
-            std::cout << t.m[r*4+c] << " ";
-        }
-        std::cout << t.trans[r] << std::endl;
+    std::cout << _GetString(_mNameCamera[cameraname]->GetWorldTransform());
+
+    // compute image roi
+    Transform O_T_B = _GetTransform(regionname); // region transform in world frame
+    Transform C_T_O = O_T_C.inverse(); // world origin in camera frame
+    Transform O_T_Bvertex[8]; // box vertex transforms in world frame
+    Transform C_T_Bvertex[8]; // box vertex transforms in camera frame
+    // initialize all vertices with box transform
+    for (unsigned int i=0; i<8; i++) {
+        O_T_Bvertex[i] = O_T_B;
     }
+    // get globalroi3d
+    double globalroi3d[6]; //= { 0.0, 0.33, 0.0, 0.69, 0.0, 0.21}; // minx maxx miny maxy minz maxz
+    globalroi3d[0] = _mNameRegion[regionname]->pRegionParameters->minx;
+    globalroi3d[1] = _mNameRegion[regionname]->pRegionParameters->maxx;
+    globalroi3d[2] = _mNameRegion[regionname]->pRegionParameters->miny;
+    globalroi3d[3] = _mNameRegion[regionname]->pRegionParameters->maxy;
+    globalroi3d[4] = _mNameRegion[regionname]->pRegionParameters->minz;
+    globalroi3d[5] = _mNameRegion[regionname]->pRegionParameters->maxz;
+    // update vertices with globalroi3d
+    unsigned int index=0;
+    for (unsigned int i=0; i<2; i++) {
+        for (unsigned int j=2; j<4; j++) {
+            for (unsigned int k=4; k<6; k++) {
+                O_T_Bvertex[index].trans[1] += globalroi3d[j];
+                O_T_Bvertex[index].trans[0] += globalroi3d[i];
+                O_T_Bvertex[index].trans[2] += globalroi3d[k];
+                //std::cout << "vertex " << index << " " << O_T_Bvertex[index].trans[0] << ", " << O_T_Bvertex[index].trans[1] << ", " << O_T_Bvertex[index].trans[2] << std::endl;
+                C_T_Bvertex[index] = C_T_O * O_T_Bvertex[index];
+                index++;
+            }
+        }
+    }
+    // get sensordata
+    RobotResource::AttachedSensorResource::SensorData sensordata;
+    utils::GetSensorData(_pControllerClient, _pSceneResource, cameraname, sensordata);
+    // project vertices into image
+    std::vector<double> pxlist, pylist;
+    double x,y,px,py;
+    for (unsigned int i=0; i<8; i++) {
+        x = C_T_Bvertex[i].trans[0] / C_T_Bvertex[i].trans[2];
+        y = C_T_Bvertex[i].trans[1] / C_T_Bvertex[i].trans[2];
+        px = sensordata.intrinsic[0] * x  + sensordata.intrinsic[1] * y + sensordata.intrinsic[2];
+        py = sensordata.intrinsic[3] * x  + sensordata.intrinsic[4] * y + sensordata.intrinsic[5];
+        pxlist.push_back(px);
+        pylist.push_back(py);
+    }
+    // need to make sure roi is within image boundary
+    const int image_width  = sensordata.image_dimensions[0];
+    const int image_height  = sensordata.image_dimensions[1];
+    _mNameCamera[cameraname]->pCameraParameters->minu = std::max(int(*std::min_element(pxlist.begin(),pxlist.end())), 0);
+    _mNameCamera[cameraname]->pCameraParameters->maxu = std::min(int(*std::max_element(pxlist.begin(),pxlist.end())), image_width);
+    _mNameCamera[cameraname]->pCameraParameters->minv = std::max(int(*std::min_element(pylist.begin(),pylist.end())), 0);
+    _mNameCamera[cameraname]->pCameraParameters->maxv = std::min(int(*std::max_element(pylist.begin(),pylist.end())), image_height);
+    std::cout << "image_roi: " << _mNameCamera[cameraname]->pCameraParameters->minu << ", " << _mNameCamera[cameraname]->pCameraParameters->maxu << ", " << _mNameCamera[cameraname]->pCameraParameters->minv << ", "<< _mNameCamera[cameraname]->pCameraParameters->maxv << std::endl;
 }
 
 void MujinVisionManager::_SyncRegion(const std::string& regionname)
@@ -714,6 +765,8 @@ void MujinVisionManager::_SyncRegion(const std::string& regionname)
         throw MujinVisionException("Region "+regionname+ " is unknown!", MVE_InvalidArgument);
     }
     _mNameRegion[regionname]->SetWorldTransform(_GetTransform(regionname));
+    std::cout << "setting region transform to: " << std::endl;
+    std::cout << _GetString(_mNameRegion[regionname]->GetWorldTransform());
     // update globalroi3d from mujin controller
     if (!_mNameRegion[regionname]->pRegionParameters->bInitializedRoi) {
         std::cout << "Computing globalroi3d from mujin controller." << std::endl;
@@ -787,8 +840,10 @@ ptree MujinVisionManager::Initialize(const std::string& detectorConfigFilename, 
     std::stringstream url_ss;
     url_ss << "http://"<< controllerIp << ":" << controllerPort;
     ControllerClientPtr controller = CreateControllerClient(controllerUsernamePass, url_ss.str());
+    _pControllerClient = controller;
     _SetStatusMessage("Connected to mujin controller at " + url_ss.str());
     SceneResourcePtr scene(new SceneResource(controller,binpickingTaskScenePk));
+    _pSceneResource = scene;
     _pBinpickingTask = scene->GetOrCreateBinPickingTaskFromName_UTF8("binpickingtask1", TRO_EnableZMQ);
     _pBinpickingTask->Initialize(robotControllerIp, robotControllerPort, binpickingTaskZmqPort, binpickingTaskHeartbeatPort, binpickingTaskHeartbeatTimeout);
 
@@ -834,7 +889,7 @@ ptree MujinVisionManager::Initialize(const std::string& detectorConfigFilename, 
         if (std::find(region->pRegionParameters->cameranames.begin(), region->pRegionParameters->cameranames.end(), name) != region->pRegionParameters->cameranames.end()) {
             _SetStatusMessage("Loading parameters for color camera " + name +".");
             _mNameCamera[name] = CameraPtr(new Camera(name, pcameraparameters, calibrationdata));
-            _SyncCamera(name);
+            _SyncCamera(regionname, name);
             _mNameColorCamera[name] = _mNameCamera[name];
             if (pcameraparameters->isDepthCamera) {
                 _SetStatusMessage("Loading parameters for depth camera " + name +".");
@@ -1037,7 +1092,7 @@ ptree MujinVisionManager::SyncCameras(const std::string& regionname, const std::
     std::cout << "updating ";
     for (unsigned int i=0; i<cameranamestobeused.size(); i++) {
         std::cout << cameranamestobeused[i];
-        _SyncCamera(cameranamestobeused[i]);
+        _SyncCamera(regionname, cameranamestobeused[i]);
         if (i<cameranamestobeused.size()-1) {
             std::cout << ", ";
         }
@@ -1122,6 +1177,19 @@ void MujinVisionManager::TransformDetectedObjects(const std::vector<DetectedObje
         detectedobjectsto.push_back(detectedobj);
     }
     BOOST_ASSERT(detectedobjectsfrom.size() == detectedobjectsto.size());
+}
+
+std::string MujinVisionManager::_GetString(const Transform& transform)
+{
+    std::stringstream ss;
+    TransformMatrix t(transform);
+    for (unsigned int r = 0; r < 3; ++r) {
+        for (unsigned int c = 0; c < 3; ++c) {
+            ss << t.m[r*4+c] << " ";
+        }
+        ss << t.trans[r] << std::endl;
+    }
+    return ss.str();
 }
 
 } // namespace mujinvision

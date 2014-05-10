@@ -263,7 +263,7 @@ private:
 
     /** \brief Updates the world transform of camera from the mujin controller.
      */
-    void _SyncCamera(const std::string& cameraname);
+    void _SyncCamera(const std::string& regionname, const std::string& cameraname);
 
     /** \brief Gets a color image from image subscriber manager.
      */
@@ -289,12 +289,18 @@ private:
      */
     Transform _GetTransform(const mujinclient::Transform& t);
 
+    /** \brief Get string representation of transform.
+     */
+    std::string _GetString(const Transform& transform);
+
     /** \brief Gets status json string.
      */
     std::string _GetStatusJsonString(const unsigned long long timestamp, const std::string& status, const std::string& message);
 
     boost::array<std::string,8> _vStatusDescriptions;
 
+    ControllerClientPtr _pControllerClient;
+    SceneResourcePtr _pSceneResource;
     VisionServerParametersPtr _pVisionServerParameters;
 
     std::queue<ManagerStatus> _statusQueue;
