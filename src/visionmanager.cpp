@@ -212,7 +212,7 @@ void MujinVisionManager::_ExecuteUserCommand(const ptree& command_pt, std::strin
     if (command == "Initialize") {
         result_pt = Initialize(command_pt.get<std::string>("detectorConfigurationFilename"),
                                command_pt.get<std::string>("imagesubscriberConfigurationFilename"),
-                               command_pt.get<std::string>("mujinControllerIp"), // TODO
+                               command_pt.get<std::string>("mujinControllerIp"),
                                command_pt.get<unsigned int>("mujinControllerPort"),
                                command_pt.get<std::string>("mujinControllerUsernamePass"),
                                command_pt.get<std::string>("robotControllerIp"),
@@ -598,10 +598,7 @@ void MujinVisionManager::_DetectionThread(const std::string& regionname, const s
                     sumPosition += _vDetectedPositions[minIndex][j];
                 }
                 _vDetectedMeanPosition[minIndex] = sumPosition * (1.0f/numDetections);
-                std::cout << "Part " << minIndex << " mean position: "
-                          << _vDetectedMeanPosition[minIndex][0] << ", "
-                          << _vDetectedMeanPosition[minIndex][1] << ", "
-                          << _vDetectedMeanPosition[minIndex][2] << std::endl;
+                //std::cout << "Part " << minIndex << " mean position: " << _vDetectedMeanPosition[minIndex][0] << ", " << _vDetectedMeanPosition[minIndex][1] << ", " << _vDetectedMeanPosition[minIndex][2] << std::endl;
                 double minQuatDotProduct = 999;
                 int minQuatIndex = -1;
                 for (unsigned int j=0; j<numDetections; j++) {
@@ -616,11 +613,7 @@ void MujinVisionManager::_DetectionThread(const std::string& regionname, const s
                     }
                 }
                 _vDetectedMeanRotation[minIndex] = _vDetectedRotations[minIndex][minQuatIndex];
-                std::cout << "Part " << minIndex << " mean rotation: "
-                          << _vDetectedMeanRotation[minIndex][0] << ", "
-                          << _vDetectedMeanRotation[minIndex][1] << ", "
-                          << _vDetectedMeanRotation[minIndex][2] << ", "
-                          << _vDetectedMeanRotation[minIndex][3] << std::endl;
+                //std::cout << "Part " << minIndex << " mean rotation: " << _vDetectedMeanRotation[minIndex][0] << ", " << _vDetectedMeanRotation[minIndex][1] << ", " << _vDetectedMeanRotation[minIndex][2] << ", " << _vDetectedMeanRotation[minIndex][3] << std::endl;
                 double sumScore=0;
                 for (unsigned int j=0; j<numDetections; j++) {
                     sumScore += _vDetectedScores[minIndex][j];
@@ -676,7 +669,8 @@ void MujinVisionManager::_DetectionThread(const std::string& regionname, const s
         if (_bStopDetectionThread) {
             break;
         }
-        std::cout << "Sending " << _vDetectedPositions.size() << " detected objects to the mujin controller." << std::endl;
+        //std::vector<DetectedObjectPtr> newdetectedobjects = detectedobjects;
+        std::cout << "Sending " << newdetectedobjects.size() << " detected objects to the mujin controller." << std::endl;
         SendPointCloudObstacleToController(regionname, cameranames, newdetectedobjects);
         UpdateDetectedObjects(newdetectedobjects, true);
 
@@ -1055,7 +1049,13 @@ ptree MujinVisionManager::SaveSnapshot(const std::string& regionname)
         if (std::find(cameranamestobeused.begin(), cameranamestobeused.end(), colorcameraname) != cameranamestobeused.end()) {
             std::stringstream filename_ss;
             filename_ss << colorcameraname << "_" << GetMilliTime() << ".png";
-            _pImagesubscriberManager->WriteColorImage(_GetColorImage(regionname, colorcameraname), filename_ss.str());
+            ColorImagePtr colorimage;
+            if (!!_pDetector->mColorImage[colorcameraname]) {
+                colorimage = _pDetector->mColorImage[colorcameraname];
+            } else {
+                colorimage = _GetColorImage(regionname, colorcameraname);
+            }
+            _pImagesubscriberManager->WriteColorImage(colorimage, filename_ss.str());
         }
     }
     FOREACH(iter,_mNameDepthCamera) {
@@ -1063,7 +1063,13 @@ ptree MujinVisionManager::SaveSnapshot(const std::string& regionname)
         if (std::find(cameranamestobeused.begin(), cameranamestobeused.end(), depthcameraname) != cameranamestobeused.end()) {
             std::stringstream filename_ss;
             filename_ss << depthcameraname << "_" << GetMilliTime() << ".pcd";
-            _pImagesubscriberManager->WriteDepthImage(_GetDepthImage(regionname, depthcameraname), filename_ss.str());
+            DepthImagePtr depthimage;
+            if (!!_pDetector->mMergedDepthImage[depthcameraname]) {
+                depthimage = _pDetector->mMergedDepthImage[depthcameraname];
+            } else {
+                depthimage = _GetDepthImage(regionname, depthcameraname);
+            }
+            _pImagesubscriberManager->WriteDepthImage(depthimage, filename_ss.str());
         }
     }
     return _GetResultPtree(MS_Succeeded);

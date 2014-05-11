@@ -98,7 +98,7 @@ public:
      */
     virtual ptree ClearVisualizationOnController()=0;
 
-    /** \brief saves a snapshot for each sensor mapped to the region
+    /** \brief Saves a snapshot for each sensor mapped to the region. If detection was called before, snapshots of the images used for the last detection will be saved. Images are saved to the visionmanager application directory.
      */
     virtual ptree SaveSnapshot(const std::string& regionname) = 0;
 

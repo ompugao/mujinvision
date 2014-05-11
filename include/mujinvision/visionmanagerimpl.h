@@ -265,11 +265,11 @@ private:
      */
     void _SyncCamera(const std::string& regionname, const std::string& cameraname);
 
-    /** \brief Gets a color image from image subscriber manager.
+    /** \brief Gets a color image (uncropped) from image subscriber manager.
      */
     ColorImagePtr _GetColorImage(const std::string& regionname, const std::string& cameraname);
 
-    /** \brief Gets a depth image from image subscriber manager.
+    /** \brief Gets a depth image (uncropped) from image subscriber manager.
      */
     DepthImagePtr _GetDepthImage(const std::string& regionname, const std::string& cameraname);
 
