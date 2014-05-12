@@ -281,6 +281,14 @@ private:
      */
     std::vector<std::string> _GetCameraNames(const std::string& regionname, const std::vector<std::string>& cameranames);
 
+    /** \brief This function wraps _GetCameraNames so that it returns only color cameras.
+     */
+    std::vector<std::string> _GetColorCameraNames(const std::string& regionname, const std::vector<std::string>& cameranames);
+
+    /** \brief This function wraps _GetCameraNames so that it returns only depth cameras.
+     */
+    std::vector<std::string> _GetDepthCameraNames(const std::string& regionname, const std::vector<std::string>& cameranames);
+
     /** \brief Sends detected object list to mujin controller.
      */
     void _SendDetectedObjectsToController(const std::vector<DetectedObjectPtr>& detectedobjectsworld);

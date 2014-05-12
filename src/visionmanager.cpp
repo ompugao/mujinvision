@@ -923,9 +923,8 @@ ptree MujinVisionManager::Initialize(const std::string& detectorConfigFilename, 
 ptree MujinVisionManager::DetectObjects(const std::string& regionname, const std::vector<std::string>&cameranames, std::vector<DetectedObjectPtr>&detectedobjects)
 {
     // TODO: use actual cameras
-    std::vector<std::string> cameranamestobeused = _GetCameraNames(regionname, cameranames);
-    std::string colorcameraname = cameranamestobeused[0];
-    std::string depthcameraname = cameranamestobeused[0];
+    std::string colorcameraname = _GetColorCameraNames(regionname, cameranames).at(0);
+    std::string depthcameraname = _GetDepthCameraNames(regionname, cameranames).at(0);
     CameraPtr colorcamera = _mNameCamera[colorcameraname];
     CameraPtr depthcamera = _mNameCamera[depthcameraname];
 
@@ -1136,6 +1135,30 @@ std::vector<std::string> MujinVisionManager::_GetCameraNames(const std::string& 
         }
     }
     return cameranamestobeused;
+}
+
+std::vector<std::string> MujinVisionManager::_GetColorCameraNames(const std::string& regionname, const std::vector<std::string>& cameranames)
+{
+    std::vector<std::string> cameranamescandidates = _GetCameraNames(regionname, cameranames);
+    std::vector<std::string> colorcameranames;
+    for(std::vector<std::string>::const_iterator itr = cameranamescandidates.begin(); itr != cameranamescandidates.end(); itr++) {
+        if(! _mNameCameraParameters[*itr]->isDepthCamera){
+            colorcameranames.push_back(*itr);
+        }
+    }
+    return colorcameranames;
+}
+
+std::vector<std::string> MujinVisionManager::_GetDepthCameraNames(const std::string& regionname, const std::vector<std::string>& cameranames)
+{
+    std::vector<std::string> cameranamescandidates= _GetCameraNames(regionname, cameranames);
+    std::vector<std::string> colorcameranames;
+    for(std::vector<std::string>::const_iterator itr = cameranamescandidates.begin(); itr != cameranamescandidates.end(); itr++) {
+        if(_mNameCameraParameters[*itr]->isDepthCamera){
+            colorcameranames.push_back(*itr);
+        }
+    }
+    return colorcameranames;
 }
 
 void MujinVisionManager::_SendDetectedObjectsToController(const std::vector<DetectedObjectPtr>& detectedobjectsworld)
