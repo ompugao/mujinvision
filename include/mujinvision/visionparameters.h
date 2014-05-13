@@ -336,6 +336,7 @@ struct MUJINVISION_API CameraParameters : public ParametersBase // TODO: auto co
         minv = roi[2];
         maxv = roi[3];
 
+        isColorCamera = pt.get<bool>("is_color_camera", true);
         isDepthCamera = pt.get<bool>("is_depth_camera", true);
     }
 
@@ -344,6 +345,7 @@ struct MUJINVISION_API CameraParameters : public ParametersBase // TODO: auto co
 
     //std::string name;
     std::string id;
+    bool isColorCamera;
     bool isDepthCamera;
     /// \brief image roi in pixel
     int minu,maxu,minv,maxv;
@@ -356,6 +358,9 @@ struct MUJINVISION_API CameraParameters : public ParametersBase // TODO: auto co
         ss << "\"id\": \"" << id << "\"";
         if (minu>0) {
             ss << ", \"imageroi\": ["<< minu << ", " << maxu << ", " << minv << ", " << maxv << "]";
+        }
+        if (!isColorCamera) {
+            ss << ", \"is_color_camera\": false";
         }
         if (!isDepthCamera) {
             ss << ", \"is_depth_camera\": false";
@@ -381,6 +386,9 @@ struct MUJINVISION_API CameraParameters : public ParametersBase // TODO: auto co
                 p.put("",maxv);
                 imageroi_pt.push_back(std::make_pair("", p));
                 _pt.put_child("imageroi", imageroi_pt);
+            }
+            if (!isColorCamera) {
+                _pt.put<bool>("isColorCamera", isColorCamera);
             }
             if (!isDepthCamera) {
                 _pt.put<bool>("isDepthCamera", isDepthCamera);

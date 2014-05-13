@@ -1142,7 +1142,7 @@ std::vector<std::string> MujinVisionManager::_GetColorCameraNames(const std::str
     std::vector<std::string> cameranamescandidates = _GetCameraNames(regionname, cameranames);
     std::vector<std::string> colorcameranames;
     for(std::vector<std::string>::const_iterator itr = cameranamescandidates.begin(); itr != cameranamescandidates.end(); itr++) {
-        if(! _mNameCameraParameters[*itr]->isDepthCamera){
+        if(_mNameCameraParameters[*itr]->isColorCamera){
             colorcameranames.push_back(*itr);
         }
     }
