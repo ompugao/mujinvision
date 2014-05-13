@@ -942,7 +942,7 @@ ptree MujinVisionManager::DetectObjects(const std::string& regionname, const std
     // detect in color image
     _SetStatusMessage("Detecting in color image.");
     std::vector<DetectedObjectPtr> resultscolorcamera;
-    _pDetector->DetectInColorImage(colorcameraname, _pDetector->mColorImage[colorcameraname], resultscolorcamera);
+    _pDetector->DetectInColorImage(colorcameraname, resultscolorcamera);
     std::stringstream ss;
     ss << "Detected " << resultscolorcamera.size() << " objects in color image." << std::endl;
     _SetStatusMessage(ss.str());

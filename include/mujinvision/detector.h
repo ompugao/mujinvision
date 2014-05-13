@@ -41,10 +41,9 @@ public:
 
     /** \brief detects object in the color image
         \param colorcameraname name of the color camera
-        \param pcolorimage pointer to the color iamge object
         \param resultscolorcamera poses of detected objects in color camera frame
      */
-    virtual void DetectInColorImage(const std::string& colorcameraname, ColorImagePtr pcolorimage, std::vector<DetectedObjectPtr>& resultscolorcamera) = 0;
+    virtual void DetectInColorImage(const std::string& colorcameraname, std::vector<DetectedObjectPtr>& resultscolorcamera) = 0;
 
     /** \brief Refines 2d image detection results with depth data
         \param colorcameraname name of the color camera that generated the image detection results
