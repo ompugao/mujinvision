@@ -679,8 +679,8 @@ void MujinVisionManager::_DetectionThread(const std::string& regionname, const s
 mujinvision::Transform MujinVisionManager::_GetTransform(const std::string& instobjname)
 {
     mujinclient::Transform t;
-    _pBinpickingTask->GetTransform(instobjname,t); // in mm
-    return mujinvision::Transform(Vector( t.quaternion[0],t.quaternion[1],t.quaternion[2], t.quaternion[3]), Vector(t.translate[0]/1000.0,t.translate[1]/1000.0, t.translate[2]/1000.0)); // in m
+    _pBinpickingTask->GetTransform(instobjname,t,"m");
+    return mujinvision::Transform(Vector(t.quaternion[0] /*w*/,t.quaternion[1] /*x*/, t.quaternion[2] /*y*/,t.quaternion[3] /*z*/), Vector(t.translate[0], t.translate[1], t.translate[2]));
 }
 
 void MujinVisionManager::_SyncCamera(const std::string& regionname, const std::string& cameraname)
