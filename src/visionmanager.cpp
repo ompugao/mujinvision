@@ -497,19 +497,25 @@ void MujinVisionManager::_DetectionThread(const std::string& regionname, const s
             Transform transform = _GetTransform(pickedpositions.transforms[i]);
             Vector position = transform.trans;
 
-            for (unsigned int j=_vDetectedMeanPosition.size()-1; j>0; j--) { // have to iterate from the end to remove items from the vectors
-                double dist = std::sqrt(((position-_vDetectedMeanPosition[j])*weights).lengthsqr3());
-                std::cout << "Part " << j << " distance to object " << dist << std::endl;
-                if (dist < _pVisionServerParameters->clearRadius) {
-                    std::cout << "Part " << j << " is within the clear radius of picked position, clear its records." << std::endl;
-                    _vDetectedTimestamp.erase(_vDetectedTimestamp.begin()+j);
-                    _vDetectedCount.erase(_vDetectedCount.begin()+j);
-                    _vDetectedMeanScore.erase(_vDetectedMeanScore.begin()+j);
-                    _vDetectedMeanPosition.erase(_vDetectedMeanPosition.begin()+j);
-                    _vDetectedMeanRotation.erase(_vDetectedMeanRotation.begin()+j);
-                    _vDetectedPositions.erase(_vDetectedPositions.begin()+j);
-                    _vDetectedRotations.erase(_vDetectedRotations.begin()+j);
-                    _vDetectedScores.erase(_vDetectedScores.begin()+j);
+            if (_vDetectedMeanPosition.size() > 0) {
+                for (unsigned int j = _vDetectedMeanPosition.size() - 1; j >= 0; j--) { // have to iterate from the end to remove items from the vectors
+                    //for (std::vector<Vector>::iterator detectedmeanpositionitr = _vDetectedMeanPosition.end(); detectedmeanpositionitr != _vDetectedMeanPosition.begin(); ) {
+                    //for (std::vector<Vector>::reverse_iterator detectedmeanpositionitr = _vDetectedMeanPosition.rbegin(); detectedmeanpositionitr != _vDetectedMeanPosition.rend(); detectedmeanpositionitr++) {
+                    //detectedmeanpositionitr--;
+                    //unsigned int j = detectedmeanpositionitr - _vDetectedMeanRotation.begin();
+                    double dist = std::sqrt(((position-_vDetectedMeanPosition[j])*weights).lengthsqr3());
+                    std::cout << "Part " << j << " distance to object " << dist << std::endl;
+                    if (dist < _pVisionServerParameters->clearRadius) {
+                        std::cout << "Part " << j << " is within the clear radius of picked position, clear its records." << std::endl;
+                        _vDetectedTimestamp.erase(_vDetectedTimestamp.begin()+j);
+                        _vDetectedCount.erase(_vDetectedCount.begin()+j);
+                        _vDetectedMeanScore.erase(_vDetectedMeanScore.begin()+j);
+                        _vDetectedMeanPosition.erase(_vDetectedMeanPosition.begin()+j);
+                        _vDetectedMeanRotation.erase(_vDetectedMeanRotation.begin()+j);
+                        _vDetectedPositions.erase(_vDetectedPositions.begin()+j);
+                        _vDetectedRotations.erase(_vDetectedRotations.begin()+j);
+                        _vDetectedScores.erase(_vDetectedScores.begin()+j);
+                    }
                 }
             }
         }
@@ -780,12 +786,13 @@ ColorImagePtr MujinVisionManager::_GetColorImage(const std::string& regionname, 
     while (1) {
         colorimage = _pImagesubscriberManager->GetColorImage(cameraname,timestamp);
         if (!colorimage) {
-            std::cerr << "could not get color image for camera: " << cameraname << ", wait for 1 more second" << std::endl;
+            std::cerr << "[ERROR]: could not get color image for camera: " << cameraname << ", wait for 1 more second" << std::endl;
             boost::this_thread::sleep(boost::posix_time::seconds(1));
             continue;
         }
         _pBinpickingTask->IsRobotOccludingBody(regionname, cameraname, timestamp, timestamp, isoccluding);
         if (!isoccluding) {
+            std::cerr << "[ERROR]: robot is occuluding!!! I can not see the bin from " << cameraname << " !!!" << std::endl;
             break;
         }
     }
@@ -1011,7 +1018,7 @@ ptree MujinVisionManager::SendPointCloudObstacleToController(const std::string& 
 
 ptree MujinVisionManager::VisualizePointCloudOnController(const std::string& regionname, const std::vector<std::string>&cameranames)
 {
-    std::vector<std::string> cameranamestobeused = _GetCameraNames(regionname, cameranames);
+    std::vector<std::string> cameranamestobeused = _GetDepthCameraNames(regionname, cameranames);
     std::vector<std::vector<Real> > pointslist;
     std::vector<std::string> names;
     std::vector<double> points;
