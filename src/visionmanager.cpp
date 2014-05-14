@@ -988,21 +988,23 @@ ptree MujinVisionManager::StopDetectionLoop()
 
 ptree MujinVisionManager::SendPointCloudObstacleToController(const std::string& regionname, const std::vector<std::string>&cameranames, const std::vector<DetectedObjectPtr>& detectedobjectsworld, const double voxelsize, const double pointsize)
 {
-    std::vector<std::string> cameranamestobeused = _GetCameraNames(regionname, cameranames);
-    // TODO: using only the first camera now
-    std::string cameraname = cameranamestobeused[0];
-    // transform detection result to depthcamera frame
-    std::vector<DetectedObjectPtr> detectedobjectscamera;
-    Utils::TransformDetectedObjects(detectedobjectsworld, detectedobjectscamera, Transform(), _mNameCamera[cameraname]->GetWorldTransform());
+    std::vector<std::string> cameranamestobeused = _GetDepthCameraNames(regionname, cameranames);
+    //for (std::vector<std::string>::iterator pcameraname = cameranamestobeused.begin(); pcameraname != cameranamestobeused.end(); pcameraname++) {
+    for(size_t i=0; i<cameranamestobeused.size(); i++) {
+        std::string cameraname = cameranamestobeused[i];
+        // transform detection result to depthcamera frame
+        std::vector<DetectedObjectPtr> detectedobjectscamera;
+        Utils::TransformDetectedObjects(detectedobjectsworld, detectedobjectscamera, Transform(), _mNameCamera[cameraname]->GetWorldTransform());
 
-    // get point cloud obstacle
-    std::vector<Real> points;
-    _pDetector->GetPointCloudObstacle(cameraname, detectedobjectscamera, points, voxelsize);
+        // get point cloud obstacle
+        std::vector<Real> points;
+        _pDetector->GetPointCloudObstacle(cameraname, detectedobjectscamera, points, voxelsize);
 
-    std::stringstream ss;
-    ss <<"Sending over " << (points.size()/3) << " points.";
-    _SetStatusMessage(ss.str());
-    _pBinpickingTask->AddPointCloudObstacle(points, pointsize, "__dynamicobstacle__");
+        std::stringstream ss;
+        ss <<"Sending over " << (points.size()/3) << " points.";
+        _SetStatusMessage(ss.str());
+        _pBinpickingTask->AddPointCloudObstacle(points, pointsize, "__dynamicobstacle__");
+    }
 
     return _GetResultPtree(MS_Succeeded);
 }
