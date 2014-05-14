@@ -201,10 +201,6 @@ public:
     ptree SyncCameras(const std::string& regionname,
                       const std::vector<std::string>& cameranames);
 
-    /** \brief Transforms detected objects.
-     */
-    static void TransformDetectedObjects(const std::vector<DetectedObjectPtr>& detectedobjectsfrom, std::vector<DetectedObjectPtr>& detectedobjectsto, const Transform& worldtransformfrom, const Transform& worldtransformto);
-
     bool bShutdown;
 
 private:

@@ -807,5 +807,13 @@ protected:
     boost::function<void(const std::string& msg)> _setstatusfn;
 };
 
+class MUJINVISION_API Utils
+{
+public:
+    /** \brief Transforms detected objects.
+     */
+    static void TransformDetectedObjects(const std::vector<DetectedObjectPtr>& detectedobjectsfrom, std::vector<DetectedObjectPtr>& detectedobjectsto, const Transform& worldtransformfrom, const Transform& worldtransformto);
+};
+
 } // namespace mujinvision
 #endif

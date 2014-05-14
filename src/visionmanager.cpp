@@ -439,11 +439,6 @@ void MujinVisionManager::_CommandThread(const unsigned int port)
             std::cerr << "zmq exception " << e.what() << std::endl;
             throw;
         }
-        // FIXME: move this inside detector
-        // catch (const HalconCpp::HException& e) {
-        //     _SetStatus(MS_Aborted,"",true);
-        //     std::cerr << "HException " << e.ErrorText() << std::endl;
-        // }
         catch (const std::exception& e) {
             _SetStatus(MS_Aborted,"",true);
             std::cerr << "std::exception " << e.what() << std::endl;
@@ -954,7 +949,7 @@ ptree MujinVisionManager::DetectObjects(const std::string& regionname, const std
     std::vector<DetectedObjectPtr> resultscolorcameradepthcamera, resultsdepthcamera;
     std::vector<unsigned int > indicescolorcamera;
     // convert resultscolorcamera to depth camera frame
-    TransformDetectedObjects(resultscolorcamera, resultscolorcameradepthcamera, colorcamera->GetWorldTransform(), depthcamera->GetWorldTransform());
+    Utils::TransformDetectedObjects(resultscolorcamera, resultscolorcameradepthcamera, colorcamera->GetWorldTransform(), depthcamera->GetWorldTransform());
     _pDetector->RefineDetectionWithDepthData(colorcameraname, depthcameraname, resultscolorcameradepthcamera, resultsdepthcamera, indicescolorcamera);
     ss.str("");
     ss.clear();
@@ -974,7 +969,7 @@ ptree MujinVisionManager::DetectObjects(const std::string& regionname, const std
     // convert results to world frame
     Transform worldtransform;
     worldtransform.identity();
-    TransformDetectedObjects(resultsdepthcamera, detectedobjects, depthcamera->GetWorldTransform(), worldtransform);
+    Utils::TransformDetectedObjects(resultsdepthcamera, detectedobjects, depthcamera->GetWorldTransform(), worldtransform);
 
     return _GetResultPtree(MS_Succeeded);
 }
@@ -998,7 +993,7 @@ ptree MujinVisionManager::SendPointCloudObstacleToController(const std::string& 
     std::string cameraname = cameranamestobeused[0];
     // transform detection result to depthcamera frame
     std::vector<DetectedObjectPtr> detectedobjectscamera;
-    TransformDetectedObjects(detectedobjectsworld, detectedobjectscamera, Transform(), _mNameCamera[cameraname]->GetWorldTransform());
+    Utils::TransformDetectedObjects(detectedobjectsworld, detectedobjectscamera, Transform(), _mNameCamera[cameraname]->GetWorldTransform());
 
     // get point cloud obstacle
     std::vector<Real> points;
@@ -1142,7 +1137,7 @@ std::vector<std::string> MujinVisionManager::_GetColorCameraNames(const std::str
     std::vector<std::string> cameranamescandidates = _GetCameraNames(regionname, cameranames);
     std::vector<std::string> colorcameranames;
     for(std::vector<std::string>::const_iterator itr = cameranamescandidates.begin(); itr != cameranamescandidates.end(); itr++) {
-        if(_mNameCameraParameters[*itr]->isColorCamera){
+        if(_mNameCameraParameters[*itr]->isColorCamera) {
             colorcameranames.push_back(*itr);
         }
     }
@@ -1154,7 +1149,7 @@ std::vector<std::string> MujinVisionManager::_GetDepthCameraNames(const std::str
     std::vector<std::string> cameranamescandidates= _GetCameraNames(regionname, cameranames);
     std::vector<std::string> colorcameranames;
     for(std::vector<std::string>::const_iterator itr = cameranamescandidates.begin(); itr != cameranamescandidates.end(); itr++) {
-        if(_mNameCameraParameters[*itr]->isDepthCamera){
+        if(_mNameCameraParameters[*itr]->isDepthCamera) {
             colorcameranames.push_back(*itr);
         }
     }
@@ -1192,7 +1187,7 @@ Transform MujinVisionManager::_GetTransform(const mujinclient::Transform& t)
     return transform;
 }
 
-void MujinVisionManager::TransformDetectedObjects(const std::vector<DetectedObjectPtr>& detectedobjectsfrom, std::vector<DetectedObjectPtr>& detectedobjectsto, const Transform& O_T_S, const Transform& O_T_G)
+void Utils::TransformDetectedObjects(const std::vector<DetectedObjectPtr>& detectedobjectsfrom, std::vector<DetectedObjectPtr>& detectedobjectsto, const Transform& O_T_S, const Transform& O_T_G)
 {
     detectedobjectsto.clear();
     if (detectedobjectsfrom.size()==0) {
