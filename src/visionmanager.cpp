@@ -499,10 +499,6 @@ void MujinVisionManager::_DetectionThread(const std::string& regionname, const s
 
             if (_vDetectedMeanPosition.size() > 0) {
                 for (unsigned int j = _vDetectedMeanPosition.size() - 1; j >= 0; j--) { // have to iterate from the end to remove items from the vectors
-                    //for (std::vector<Vector>::iterator detectedmeanpositionitr = _vDetectedMeanPosition.end(); detectedmeanpositionitr != _vDetectedMeanPosition.begin(); ) {
-                    //for (std::vector<Vector>::reverse_iterator detectedmeanpositionitr = _vDetectedMeanPosition.rbegin(); detectedmeanpositionitr != _vDetectedMeanPosition.rend(); detectedmeanpositionitr++) {
-                    //detectedmeanpositionitr--;
-                    //unsigned int j = detectedmeanpositionitr - _vDetectedMeanRotation.begin();
                     double dist = std::sqrt(((position-_vDetectedMeanPosition[j])*weights).lengthsqr3());
                     std::cout << "Part " << j << " distance to object " << dist << std::endl;
                     if (dist < _pVisionServerParameters->clearRadius) {
@@ -786,14 +782,15 @@ ColorImagePtr MujinVisionManager::_GetColorImage(const std::string& regionname, 
     while (1) {
         colorimage = _pImagesubscriberManager->GetColorImage(cameraname,timestamp);
         if (!colorimage) {
-            std::cerr << "[ERROR]: could not get color image for camera: " << cameraname << ", wait for 1 more second" << std::endl;
+            std::cerr << "[WARN]: Could not get color image for camera: " << cameraname << ", wait for 1 more second." << std::endl;
             boost::this_thread::sleep(boost::posix_time::seconds(1));
             continue;
         }
         _pBinpickingTask->IsRobotOccludingBody(regionname, cameraname, timestamp, timestamp, isoccluding);
         if (!isoccluding) {
-            std::cerr << "[ERROR]: robot is occuluding!!! I can not see the bin from " << cameraname << " !!!" << std::endl;
             break;
+        } else {
+            std::cerr << "[WARN]: Region is occluded in the view of " << cameraname << ", will try again." << std::endl;
         }
     }
     return colorimage;
@@ -885,10 +882,12 @@ ptree MujinVisionManager::Initialize(const std::string& detectorConfigFilename, 
         }
 
         if (std::find(region->pRegionParameters->cameranames.begin(), region->pRegionParameters->cameranames.end(), name) != region->pRegionParameters->cameranames.end()) {
-            _SetStatusMessage("Loading parameters for color camera " + name +".");
             _mNameCamera[name] = CameraPtr(new Camera(name, pcameraparameters, calibrationdata));
             _SyncCamera(regionname, name);
-            _mNameColorCamera[name] = _mNameCamera[name];
+            if (pcameraparameters->isColorCamera) {
+                _SetStatusMessage("Loading parameters for color camera " + name +".");
+                _mNameColorCamera[name] = _mNameCamera[name];
+            }
             if (pcameraparameters->isDepthCamera) {
                 _SetStatusMessage("Loading parameters for depth camera " + name +".");
                 _mNameDepthCamera[name] = _mNameCamera[name];
