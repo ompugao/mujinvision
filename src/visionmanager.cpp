@@ -848,32 +848,34 @@ ptree MujinVisionManager::Initialize(const std::string& detectorConfigFilename, 
     FOREACH(it, _mNameCameraParameters) {
         name = it->first;
         pcameraparameters = it->second;
-        SceneResource::InstObjectPtr camerainstobject;
-        if (!scene->FindInstObject(name, camerainstobject)) {
-            throw MujinVisionException("Cannot find camera with name: " + name +" on the mujin controller.", MVE_InvalidArgument);
-        }
-        RobotResourcePtr camerarobot(new RobotResource(controller,camerainstobject->object_pk));
-        std::vector<RobotResource::AttachedSensorResourcePtr> attachedsensors;
-        camerarobot->GetAttachedSensors(attachedsensors);
-        if (attachedsensors.size() == 0) {
-            throw MujinVisionException("Cannot find the attached sensor on the mujin controller. Is calibration done for camera: " + name + "?", MVE_ControllerError);
-        }
-        CalibrationDataPtr calibrationdata(new CalibrationData());
-        calibrationdata->fx           = attachedsensors[0]->sensordata.intrinsic[0];
-        calibrationdata->fy           = attachedsensors[0]->sensordata.intrinsic[4];
-        calibrationdata->pu           = attachedsensors[0]->sensordata.intrinsic[2];
-        calibrationdata->pv           = attachedsensors[0]->sensordata.intrinsic[5];
-        calibrationdata->s            = attachedsensors[0]->sensordata.intrinsic[1];
-        calibrationdata->focal_length = attachedsensors[0]->sensordata.focal_length;
-        for (size_t idceff = 0; idceff < 5; idceff++) {
-            calibrationdata->distortioncoeffs[idceff] = attachedsensors[0]->sensordata.distortion_coeffs[idceff];
-        }
-        calibrationdata->kappa        = 0;
-        calibrationdata->image_width  = attachedsensors[0]->sensordata.image_dimensions[0];
-        calibrationdata->image_height = attachedsensors[0]->sensordata.image_dimensions[1];
-        calibrationdata->pixel_width  = attachedsensors[0]->sensordata.focal_length / attachedsensors[0]->sensordata.intrinsic[0];
-        calibrationdata->pixel_height = attachedsensors[0]->sensordata.focal_length / attachedsensors[0]->sensordata.intrinsic[4];
+        RobotResource::AttachedSensorResource::SensorData sensordata;
+        utils::GetSensorData(_pControllerClient, _pSceneResource, name, sensordata);
 
+        CalibrationDataPtr calibrationdata(new CalibrationData());
+        calibrationdata->fx           = sensordata.intrinsic[0];
+        calibrationdata->fy           = sensordata.intrinsic[4];
+        calibrationdata->pu           = sensordata.intrinsic[2];
+        calibrationdata->pv           = sensordata.intrinsic[5];
+        calibrationdata->s            = sensordata.intrinsic[1];
+        calibrationdata->focal_length = sensordata.focal_length;
+        for (size_t idceff = 0; idceff < 5; idceff++) {
+            calibrationdata->distortioncoeffs[idceff] = sensordata.distortion_coeffs[idceff];
+        }
+        if (sensordata.extra_parameters.size()==4 && sensordata.extra_parameters[0]==1) { // TODO: reorganize
+            calibrationdata->kappa = sensordata.extra_parameters[1];
+        } else {
+            calibrationdata->kappa = 0;
+        }
+        calibrationdata->image_width  = sensordata.image_dimensions[0];
+        calibrationdata->image_height = sensordata.image_dimensions[1];
+
+        if (sensordata.extra_parameters.size()==4 && sensordata.extra_parameters[0]==1) { // TODO: reorganize
+            calibrationdata->pixel_width = sensordata.extra_parameters[2];
+            calibrationdata->pixel_height = sensordata.extra_parameters[3];
+        } else {
+            calibrationdata->pixel_width  = sensordata.focal_length / sensordata.intrinsic[0];
+            calibrationdata->pixel_height = sensordata.focal_length / sensordata.intrinsic[4];
+        }
 
         if (std::find(region->pRegionParameters->cameranames.begin(), region->pRegionParameters->cameranames.end(), name) != region->pRegionParameters->cameranames.end()) {
             _SetStatusMessage("Loading parameters for color camera " + name +".");
