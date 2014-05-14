@@ -991,8 +991,7 @@ ptree MujinVisionManager::StopDetectionLoop()
 ptree MujinVisionManager::SendPointCloudObstacleToController(const std::string& regionname, const std::vector<std::string>&cameranames, const std::vector<DetectedObjectPtr>& detectedobjectsworld, const double voxelsize, const double pointsize)
 {
     std::vector<std::string> cameranamestobeused = _GetDepthCameraNames(regionname, cameranames);
-    //for (std::vector<std::string>::iterator pcameraname = cameranamestobeused.begin(); pcameraname != cameranamestobeused.end(); pcameraname++) {
-    for(size_t i=0; i<cameranamestobeused.size(); i++) {
+    for(unsigned int i=0; i<cameranamestobeused.size(); i++) {
         std::string cameraname = cameranamestobeused[i];
         // transform detection result to depthcamera frame
         std::vector<DetectedObjectPtr> detectedobjectscamera;
