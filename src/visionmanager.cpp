@@ -973,7 +973,8 @@ ptree MujinVisionManager::DetectObjects(const std::string& regionname, const std
     Transform worldtransform;
     worldtransform.identity();
     Utils::TransformDetectedObjects(resultsdepthcamera, detectedobjects, depthcamera->GetWorldTransform(), worldtransform);
-
+    // debug
+    //Utils::TransformDetectedObjects(resultscolorcamera, detectedobjects, colorcamera->GetWorldTransform(), worldtransform);
     return _GetResultPtree(MS_Succeeded);
 }
 

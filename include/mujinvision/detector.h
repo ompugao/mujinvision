@@ -52,7 +52,7 @@ public:
         \param resultsdepthcamera refined object in the depth camera frame
         \param indicescolorcamera indices of the refined poses in the input result
      */
-    virtual void RefineDetectionWithDepthData(const std::string& colorcameraname, const std::string& depthcameraname, const std::vector<DetectedObjectPtr>& resultscolorcamera, std::vector<DetectedObjectPtr>& resultsdepthcamera, std::vector<unsigned int>& indicescolorcamera) = 0;
+    virtual void RefineDetectionWithDepthData(const std::string& colorcameraname, const std::string& depthcameraname, const std::vector<DetectedObjectPtr>& resultscolorcameradepthcamera, std::vector<DetectedObjectPtr>& resultsdepthcamera, std::vector<unsigned int>& indicescolorcamera) = 0;
 
     /** \brief Gets point cloud obstacle from depth data and detection result.
         \param depthcameraname name of the depth camera
