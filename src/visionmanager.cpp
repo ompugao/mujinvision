@@ -152,7 +152,7 @@ void MujinVisionManager::_StopCommandThread(const unsigned int port)
     if (!_mPortStopCommandThread[port]) {
         _mPortStopCommandThread[port] = true;
         _mPortCommandThread[port]->join();
-        std::cout << "stopped command thread (port: " << port << ")." << std::endl;
+        std::cout << "Stopped command thread (port: " << port << ")." << std::endl;
     }
 }
 
@@ -184,7 +184,7 @@ void MujinVisionManager::_ExecuteConfigurationCommand(const ptree& command_pt, s
             _bCancelCommand = true;
             _SetStatus(MS_Preempting, "", true);
         } else {
-            std::cout << "No command is being excuted, do nothing." << std::endl;
+            _SetStatusMessage("No command is being excuted, do nothing.");
         }
         result_ss << ParametersBase::GetJsonString("status", _vStatusDescriptions.at(MS_Preempting));
     } else if (command == "Quit") {
@@ -325,7 +325,7 @@ void MujinVisionManager::_ExecuteUserCommand(const ptree& command_pt, std::strin
 void MujinVisionManager::_StatusThread(const unsigned int port, const unsigned int ms)
 {
     _StartStatusPublisher(port);
-    std::cout << "status thread (port: " << port << ") started"<< std::endl;
+    std::cout << "Started status thread (port: " << port << ")."<< std::endl;
     std::vector<ManagerStatus> vstatus;
     std::vector<std::string> vmessage;
     std::vector<unsigned long long> vtimestamp;
@@ -369,7 +369,7 @@ std::string MujinVisionManager::_GetStatusJsonString(const unsigned long long ti
 void MujinVisionManager::_CommandThread(const unsigned int port)
 {
     _StartCommandServer(port);
-    std::cout << "command thread (port: " << port << ") started" << std::endl;
+    std::cout << "Started command thread (port: " << port << ")." << std::endl;
     std::string incomingmessage;
     ptree command_pt;
     std::stringstream command_ss, result_ss;
@@ -377,7 +377,7 @@ void MujinVisionManager::_CommandThread(const unsigned int port)
         try {
             // receive message
             if( _mPortCommandServer[port]->Recv(incomingmessage) > 0 ) {
-                std::cout << "command message received: " << incomingmessage << std::endl;
+                std::cout << "Received command message: " << incomingmessage << "." << std::endl;
                 // execute command
                 command_ss.str("");
                 command_ss.clear();
@@ -459,7 +459,7 @@ void MujinVisionManager::_StopDetectionThread()
     if (!_bStopDetectionThread) {
         _bStopDetectionThread = true;
         _pDetectionThread->join();
-        std::cout << "Stopped detection thread" << std::endl;
+        std::cout << "Stopped detection thread." << std::endl;
     }
 }
 
@@ -931,15 +931,10 @@ ptree MujinVisionManager::DetectObjects(const std::string& regionname, const std
     CameraPtr colorcamera = _mNameCamera[colorcameraname];
     CameraPtr depthcamera = _mNameCamera[depthcameraname];
 
-    // TODO: load image roi from mujin controller
-    unsigned int minu = colorcamera->pCameraParameters->minu;
-    unsigned int maxu = colorcamera->pCameraParameters->maxu;
-    unsigned int minv = colorcamera->pCameraParameters->minv;
-    unsigned int maxv = colorcamera->pCameraParameters->maxv;
-
+    // set up color image
     ColorImagePtr originalcolorimage = _GetColorImage(regionname, colorcameraname);
     DepthImagePtr depthimage = _GetDepthImage(regionname, depthcameraname);
-    _pDetector->SetColorImage(colorcameraname, originalcolorimage, minu, maxu, minv, maxv);
+    _pDetector->SetColorImage(colorcameraname, originalcolorimage, colorcamera->pCameraParameters->minu, colorcamera->pCameraParameters->maxu, colorcamera->pCameraParameters->minv, colorcamera->pCameraParameters->maxv);
     _pDetector->mMergedDepthImage[depthcameraname] = depthimage;
 
     // detect in color image
