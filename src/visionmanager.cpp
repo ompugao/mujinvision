@@ -636,7 +636,7 @@ void MujinVisionManager::_DetectionThread(const std::string& regionname, const s
         }
         if (_vDetectedPositions.size()>0) {
             // remove old detection results
-            for (unsigned i=_vDetectedPositions.size()-1; i>0; i--) {
+            for (int i=_vDetectedPositions.size()-1; i>=0; i--) {
                 if (GetMilliTime() - _vDetectedTimestamp[i] > _pVisionServerParameters->timeToRemember) {
                     std::cout << "Part " << i << " has not been seen for " << _pVisionServerParameters->timeToRemember << " ms, removing its records." << std::endl;
                     _vDetectedTimestamp.erase(_vDetectedTimestamp.begin()+i);
@@ -653,13 +653,15 @@ void MujinVisionManager::_DetectionThread(const std::string& regionname, const s
 
         // create new results
         std::vector<DetectedObjectPtr> newdetectedobjects;
-        for (unsigned int i=0; i<_vDetectedPositions.size(); i++) {
-            Transform transform;
-            transform.trans = _vDetectedMeanPosition[i];
-            transform.rot = _vDetectedMeanRotation[i];
-            DetectedObjectPtr obj(new DetectedObject(detectedobjects[0]->name, transform, _vDetectedMeanScore[i]));
-            newdetectedobjects.push_back(obj);
-            obj->Print();
+        if (detectedobjects.size()>0) {
+            for (unsigned int i=0; i<_vDetectedPositions.size(); i++) {
+                Transform transform;
+                transform.trans = _vDetectedMeanPosition[i];
+                transform.rot = _vDetectedMeanRotation[i];
+                DetectedObjectPtr obj(new DetectedObject(detectedobjects[0]->name, transform, _vDetectedMeanScore[i]));
+                newdetectedobjects.push_back(obj);
+                obj->Print();
+            }
         }
 
         // send results to mujin controller
@@ -973,8 +975,6 @@ ptree MujinVisionManager::DetectObjects(const std::string& regionname, const std
     Transform worldtransform;
     worldtransform.identity();
     Utils::TransformDetectedObjects(resultsdepthcamera, detectedobjects, depthcamera->GetWorldTransform(), worldtransform);
-    // debug
-    //Utils::TransformDetectedObjects(resultscolorcamera, detectedobjects, colorcamera->GetWorldTransform(), worldtransform);
     return _GetResultPtree(MS_Succeeded);
 }
 
