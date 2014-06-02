@@ -1,3 +1,3 @@
 [submodule "3rdparty/controllerclientcpp"]
 	path = 3rdparty/controllerclientcpp
-	url = git@github.com:mujin/controllerclientcpp.git
+	url = https://github.com/mujin/controllerclientcpp.git
