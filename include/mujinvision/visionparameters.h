@@ -330,11 +330,11 @@ struct MUJINVISION_API CameraParameters : public ParametersBase // TODO: auto co
             FOREACH(rv, *imageroi_pt) {
                 roi.push_back(boost::lexical_cast<double>(rv->second.data()));
             }
+            minu = roi[0];
+            maxu = roi[1];
+            minv = roi[2];
+            maxv = roi[3];
         }
-        minu = roi[0];
-        maxu = roi[1];
-        minv = roi[2];
-        maxv = roi[3];
 
         isColorCamera = pt.get<bool>("is_color_camera", true);
         isDepthCamera = pt.get<bool>("is_depth_camera", true);
