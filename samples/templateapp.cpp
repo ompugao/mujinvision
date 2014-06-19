@@ -101,6 +101,9 @@ public:
     void Initialize(const ptree& oparams_pt,  const ptree& dparams_pt, RegionConstPtr region, std::map<std::string, CameraPtr > mColorCamera, std::map<std::string, CameraPtr > mDepthCamera ) {
     }
 
+    void DetectObjects(const std::string& colorcameraname, const std::string& depthcameraname, std::vector<DetectedObjectPtr>& detectedobjects) {
+    }
+
     void DetectInColorImage(const std::string& colorcameraname, std::vector<DetectedObjectPtr>& resultscolorcamera) {
     }
 

@@ -39,6 +39,13 @@ public:
      */
     virtual void Initialize(const ptree& oparams_pt,  const ptree& dparams_pt, RegionConstPtr region, std::map<std::string, CameraPtr > mColorCamera, std::map<std::string, CameraPtr > mDepthCamera ) = 0;
 
+    /** Detects objects from color and depth images. Assuming SetColorImage and mMergedDepthImage were called.
+        \param colorcameraname
+        \param depthcameraname
+        \param detectedobjects in world frame
+     */
+    virtual void DetectObjects(const std::string& colorcameraname, const std::string& depthcameraname, std::vector<DetectedObjectPtr>& detectedobjects) = 0;
+
     /** \brief detects object in the color image
         \param colorcameraname name of the color camera
         \param resultscolorcamera poses of detected objects in color camera frame

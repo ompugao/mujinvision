@@ -933,49 +933,15 @@ ptree MujinVisionManager::DetectObjects(const std::string& regionname, const std
     CameraPtr colorcamera = _mNameCamera[colorcameraname];
     CameraPtr depthcamera = _mNameCamera[depthcameraname];
 
-    // set up color image
+    // set up images
     ColorImagePtr originalcolorimage = _GetColorImage(regionname, colorcameraname);
     DepthImagePtr depthimage = _GetDepthImage(regionname, depthcameraname);
     _pDetector->SetColorImage(colorcameraname, originalcolorimage, colorcamera->pCameraParameters->minu, colorcamera->pCameraParameters->maxu, colorcamera->pCameraParameters->minv, colorcamera->pCameraParameters->maxv);
     _pDetector->mMergedDepthImage[depthcameraname] = depthimage;
 
-    // detect in color image
-    _SetStatusMessage("Detecting in color image.");
-    std::vector<DetectedObjectPtr> resultscolorcamera;
-    _pDetector->DetectInColorImage(colorcameraname, resultscolorcamera);
-    std::stringstream ss;
-    ss << "Detected " << resultscolorcamera.size() << " objects in color image." << std::endl;
-    _SetStatusMessage(ss.str());
-    if (resultscolorcamera.size()==0) {
-        return _GetResultPtree(MS_Succeeded);
-    }
-
-    // detect in depth image
-    std::vector<DetectedObjectPtr> resultscolorcameradepthcamera, resultsdepthcamera;
-    std::vector<unsigned int > indicescolorcamera;
-    // convert resultscolorcamera to depth camera frame
-    Utils::TransformDetectedObjects(resultscolorcamera, resultscolorcameradepthcamera, colorcamera->GetWorldTransform(), depthcamera->GetWorldTransform());
-    _pDetector->RefineDetectionWithDepthData(colorcameraname, depthcameraname, resultscolorcameradepthcamera, resultsdepthcamera, indicescolorcamera);
-    ss.str("");
-    ss.clear();
-    ss << "Detected " << resultsdepthcamera.size() << " objects in depth image" << std::endl;
-    _SetStatusMessage(ss.str());
-    if (resultsdepthcamera.size()==0) {
-        return _GetResultPtree(MS_Succeeded);
-    }
-    ss.str("");
-    ss.clear();
-    ss << "Depth detection result in color detection result indices: ";
-    for (unsigned int i = 0; i < indicescolorcamera.size(); i++) {
-        ss << indicescolorcamera[i] << " ";
-    }
-    _SetStatusMessage(ss.str());
-
-    // convert results to world frame
-    Transform worldtransform;
-    worldtransform.identity();
-    Utils::TransformDetectedObjects(resultsdepthcamera, detectedobjects, depthcamera->GetWorldTransform(), worldtransform);
-    return _GetResultPtree(MS_Succeeded);
+    // detect objects
+    _pDetector->DetectObjects(colorcameraname, depthcameraname, detectedobjects);
+     return _GetResultPtree(MS_Succeeded);
 }
 
 ptree MujinVisionManager::StartDetectionLoop(const std::string& regionname, const std::vector<std::string>&cameranames)
