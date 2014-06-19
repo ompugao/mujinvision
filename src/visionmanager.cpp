@@ -941,6 +941,9 @@ ptree MujinVisionManager::DetectObjects(const std::string& regionname, const std
 
     // detect objects
     _pDetector->DetectObjects(colorcameraname, depthcameraname, detectedobjects);
+    std::stringstream msgss;
+    msgss << "Detected " << detectedobjects.size() << " objects.";
+    _SetStatusMessage(msgss.str());
      return _GetResultPtree(MS_Succeeded);
 }
 
