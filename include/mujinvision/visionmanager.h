@@ -72,7 +72,9 @@ public:
     /** \brief starts detection thread to continuously detect objects and sends detection results to mujin controller
      */
     virtual ptree StartDetectionLoop(const std::string& regionname,
-                                     const std::vector<std::string>& cameranames) = 0;
+                                     const std::vector<std::string>& cameranames,
+                                     const double voxelsize=0.01,
+                                     const double pointsize=0.005) = 0;
 
     virtual ptree StopDetectionLoop() = 0;
 

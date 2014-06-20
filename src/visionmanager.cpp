@@ -246,8 +246,12 @@ void MujinVisionManager::_ExecuteUserCommand(const ptree& command_pt, std::strin
                 cameranames.push_back(v->second.get<std::string>(""));
             }
         }
+        double voxelsize = command_pt.get("voxelsize",0.01);
+        double pointsize = command_pt.get("pointsize",0.005);
         result_pt = StartDetectionLoop(command_pt.get<std::string>("regionname"),
-                                       cameranames);
+                                       cameranames,
+                                       voxelsize,
+                                       pointsize);
         result_ss << ParametersBase::GetJsonString("status",result_pt.get<std::string>("status"));
     } else if (command == "StopDetectionLoop") {
         result_pt = StopDetectionLoop();
@@ -454,10 +458,10 @@ void MujinVisionManager::_CommandThread(const unsigned int port)
     _StopCommandServer(port);
 }
 
-void MujinVisionManager::_StartDetectionThread(const std::string& regionname, const std::vector<std::string>& cameranames)
+void MujinVisionManager::_StartDetectionThread(const std::string& regionname, const std::vector<std::string>& cameranames, const double voxelsize, const double pointsize)
 {
     _bStopDetectionThread = false;
-    _pDetectionThread.reset(new boost::thread(boost::bind(&MujinVisionManager::_DetectionThread, this, regionname, cameranames)));
+    _pDetectionThread.reset(new boost::thread(boost::bind(&MujinVisionManager::_DetectionThread, this, regionname, cameranames, voxelsize, pointsize)));
 }
 
 void MujinVisionManager::_StopDetectionThread()
@@ -469,7 +473,7 @@ void MujinVisionManager::_StopDetectionThread()
     }
 }
 
-void MujinVisionManager::_DetectionThread(const std::string& regionname, const std::vector<std::string>& cameranames)
+void MujinVisionManager::_DetectionThread(const std::string& regionname, const std::vector<std::string>& cameranames, const double voxelsize, const double pointsize)
 {
     while (!_bStopDetectionThread) {
         // update picked positions
@@ -676,7 +680,7 @@ void MujinVisionManager::_DetectionThread(const std::string& regionname, const s
         }
         //std::vector<DetectedObjectPtr> newdetectedobjects = detectedobjects;
         std::cout << "Sending " << newdetectedobjects.size() << " detected objects to the mujin controller." << std::endl;
-        SendPointCloudObstacleToController(regionname, cameranames, newdetectedobjects);
+        SendPointCloudObstacleToController(regionname, cameranames, newdetectedobjects, voxelsize, pointsize);
         UpdateDetectedObjects(newdetectedobjects, true);
 
         // visualize results
@@ -953,9 +957,9 @@ ptree MujinVisionManager::DetectObjects(const std::string& regionname, const std
      return _GetResultPtree(MS_Succeeded);
 }
 
-ptree MujinVisionManager::StartDetectionLoop(const std::string& regionname, const std::vector<std::string>&cameranames)
+ptree MujinVisionManager::StartDetectionLoop(const std::string& regionname, const std::vector<std::string>&cameranames,const double voxelsize, const double pointsize)
 {
-    _StartDetectionThread(regionname, cameranames);
+    _StartDetectionThread(regionname, cameranames, voxelsize, pointsize);
     return _GetResultPtree(MS_Succeeded);
 }
 
@@ -970,13 +974,9 @@ ptree MujinVisionManager::SendPointCloudObstacleToController(const std::string& 
     std::vector<std::string> cameranamestobeused = _GetDepthCameraNames(regionname, cameranames);
     for(unsigned int i=0; i<cameranamestobeused.size(); i++) {
         std::string cameraname = cameranamestobeused[i];
-        // transform detection result to depthcamera frame
-        std::vector<DetectedObjectPtr> detectedobjectscamera;
-        Utils::TransformDetectedObjects(detectedobjectsworld, detectedobjectscamera, Transform(), _mNameCamera[cameraname]->GetWorldTransform());
-
         // get point cloud obstacle
         std::vector<Real> points;
-        _pDetector->GetPointCloudObstacle(cameraname, detectedobjectscamera, points, voxelsize);
+        _pDetector->GetPointCloudObstacle(cameraname, detectedobjectsworld, points, voxelsize);
 
         std::stringstream ss;
         ss <<"Sending over " << (points.size()/3) << " points.";

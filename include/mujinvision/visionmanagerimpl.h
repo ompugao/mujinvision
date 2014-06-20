@@ -177,7 +177,9 @@ public:
                         std::vector<DetectedObjectPtr>& detectedobjectsworld);
 
     ptree StartDetectionLoop(const std::string& regionname,
-                             const std::vector<std::string>& cameranames);
+                             const std::vector<std::string>& cameranames,
+                             const double voxelsize=0.01,
+                             const double pointsize=0.005);
 
     ptree StopDetectionLoop();
 
@@ -245,8 +247,8 @@ private:
     void _StartStatusPublisher(const unsigned int port);
     void _PublishStopStatus();
 
-    void _DetectionThread(const std::string& regionname, const std::vector<std::string>& cameranames);
-    void _StartDetectionThread(const std::string& regionname, const std::vector<std::string>& cameranames);
+    void _DetectionThread(const std::string& regionname, const std::vector<std::string>& cameranames, const double voxelsize, const double pointsize);
+    void _StartDetectionThread(const std::string& regionname, const std::vector<std::string>& cameranames, const double voxelsize, const double pointsize);
     void _StopDetectionThread();
 
 

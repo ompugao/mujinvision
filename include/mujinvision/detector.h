@@ -63,11 +63,11 @@ public:
 
     /** \brief Gets point cloud obstacle from depth data and detection result.
         \param depthcameraname name of the depth camera
-        \param resultsdepthcamera detection result in depthcamera frame
+        \param resultsworld detection result in world frame
         \param points result points representing the point cloud obstacle in world frame
         \param voxelsize size of the voxel grid in meters used for simplifying the cloud
      */
-    virtual void GetPointCloudObstacle(const std::string& depthcameraname, const std::vector<DetectedObjectPtr>& resultsdepthcamera, std::vector<double>& points, const double voxelsize=0.01) = 0;
+    virtual void GetPointCloudObstacle(const std::string& depthcameraname, const std::vector<DetectedObjectPtr>& resultsworld, std::vector<double>& points, const double voxelsize=0.01) = 0;
 
     /** \brief Gets point cloud in world frame from depth image.
         \param depthcameraname name of the depth camera
