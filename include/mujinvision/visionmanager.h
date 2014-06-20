@@ -92,7 +92,8 @@ public:
     /** \brief Visualizes the raw camera point clouds on mujin controller
      */
     virtual ptree VisualizePointCloudOnController(const std::string& regionname,
-                                                  const std::vector<std::string>& cameranames) = 0;
+                                                  const std::vector<std::string>& cameranames,
+                                                  const double pointsize=0.005) = 0;
 
     /** \brief Clears visualization made by VisualizePointCloudOnController on mujin controller.
      */

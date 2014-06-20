@@ -267,9 +267,13 @@ void MujinVisionManager::_ExecuteUserCommand(const ptree& command_pt, std::strin
                 detectedobjects.push_back(DetectedObjectPtr(new DetectedObject(v->second.get_child(""))));
             }
         }
+        double voxelsize = command_pt.get("voxelsize",0.01);
+        double pointsize = command_pt.get("pointsize",0.005);
         result_pt = SendPointCloudObstacleToController(command_pt.get<std::string>("regionname"),
                                                        cameranames,
-                                                       detectedobjects);
+                                                       detectedobjects,
+                                                       voxelsize,
+                                                       pointsize);
         result_ss << ParametersBase::GetJsonString("status",result_pt.get<std::string>("status"));
     } else if (command == "VisualizePointCloudOnController") {
         std::vector<std::string> cameranames;
@@ -279,8 +283,10 @@ void MujinVisionManager::_ExecuteUserCommand(const ptree& command_pt, std::strin
                 cameranames.push_back(v->second.get<std::string>(""));
             }
         }
+        double pointsize = command_pt.get("pointsize",0.005);
         result_pt = VisualizePointCloudOnController(command_pt.get<std::string>("regionname"),
-                                                    cameranames);
+                                                    cameranames,
+                                                    pointsize);
         result_ss << ParametersBase::GetJsonString("status",result_pt.get<std::string>("status"));
     } else if (command == "ClearVisualizationOnController") {
         result_pt = ClearVisualizationOnController();
@@ -981,7 +987,7 @@ ptree MujinVisionManager::SendPointCloudObstacleToController(const std::string& 
     return _GetResultPtree(MS_Succeeded);
 }
 
-ptree MujinVisionManager::VisualizePointCloudOnController(const std::string& regionname, const std::vector<std::string>&cameranames)
+ptree MujinVisionManager::VisualizePointCloudOnController(const std::string& regionname, const std::vector<std::string>&cameranames, const double pointsize)
 {
     std::vector<std::string> cameranamestobeused = _GetDepthCameraNames(regionname, cameranames);
     std::vector<std::vector<Real> > pointslist;
@@ -997,8 +1003,7 @@ ptree MujinVisionManager::VisualizePointCloudOnController(const std::string& reg
             names.push_back(name_ss.str());
         }
     }
-    Real pointsize = 5;
-    _pBinpickingTask->VisualizePointCloud(pointslist, pointsize, names);
+    _pBinpickingTask->VisualizePointCloud(pointslist, pointsize*1000.0f, names); // need to convert pointsize to millimeter
     return _GetResultPtree(MS_Succeeded);
 }
 

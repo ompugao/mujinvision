@@ -188,7 +188,8 @@ public:
                                              const double pointsize=0.005);
 
     ptree VisualizePointCloudOnController(const std::string& regionname,
-                                          const std::vector<std::string>& cameranames);
+                                          const std::vector<std::string>& cameranames,
+                                          const double pointsize=0.005);
 
     ptree ClearVisualizationOnController();
 
