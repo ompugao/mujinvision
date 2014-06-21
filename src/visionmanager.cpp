@@ -296,7 +296,8 @@ void MujinVisionManager::_ExecuteUserCommand(const ptree& command_pt, std::strin
         result_pt = ClearVisualizationOnController();
         result_ss << ParametersBase::GetJsonString("status",result_pt.get<std::string>("status"));
     } else if (command == "SaveSnapshot") {
-        result_pt = SaveSnapshot(command_pt.get<std::string>("regionname"));
+        bool getlatest = command_pt.get("getlatest",true);
+        result_pt = SaveSnapshot(command_pt.get<std::string>("regionname"), getlatest);
         result_ss << ParametersBase::GetJsonString("status",result_pt.get<std::string>("status"));
     } else if (command == "UpdateDetectedObjects") {
         std::vector<DetectedObjectPtr> detectedobjects;
@@ -1013,7 +1014,7 @@ ptree MujinVisionManager::ClearVisualizationOnController()
     return _GetResultPtree(MS_Succeeded);
 }
 
-ptree MujinVisionManager::SaveSnapshot(const std::string& regionname)
+ptree MujinVisionManager::SaveSnapshot(const std::string& regionname, const bool getlatest)
 {
     std::vector<std::string> cameranames;
     std::vector<std::string> cameranamestobeused = _GetCameraNames(regionname, cameranames);
@@ -1023,10 +1024,10 @@ ptree MujinVisionManager::SaveSnapshot(const std::string& regionname)
             std::stringstream filename_ss;
             filename_ss << colorcameraname << "_" << GetMilliTime() << ".png";
             ColorImagePtr colorimage;
-            if (!!_pDetector->mColorImage[colorcameraname]) {
-                colorimage = _pDetector->mColorImage[colorcameraname];
-            } else {
+            if (getlatest || !_pDetector->mColorImage[colorcameraname]) {
                 colorimage = _GetColorImage(regionname, colorcameraname);
+            } else {
+                colorimage = _pDetector->mColorImage[colorcameraname];
             }
             _pImagesubscriberManager->WriteColorImage(colorimage, filename_ss.str());
         }
@@ -1037,10 +1038,10 @@ ptree MujinVisionManager::SaveSnapshot(const std::string& regionname)
             std::stringstream filename_ss;
             filename_ss << depthcameraname << "_" << GetMilliTime() << ".pcd";
             DepthImagePtr depthimage;
-            if (!!_pDetector->mMergedDepthImage[depthcameraname]) {
-                depthimage = _pDetector->mMergedDepthImage[depthcameraname];
-            } else {
+            if (getlatest || !_pDetector->mMergedDepthImage[depthcameraname]) {
                 depthimage = _GetDepthImage(regionname, depthcameraname);
+            } else {
+                depthimage = _pDetector->mMergedDepthImage[depthcameraname];
             }
             _pImagesubscriberManager->WriteDepthImage(depthimage, filename_ss.str());
         }

@@ -195,7 +195,7 @@ public:
 
     ptree ClearVisualizationOnController();
 
-    ptree SaveSnapshot(const std::string& regionname);
+    ptree SaveSnapshot(const std::string& regionname, const bool getlatest=true);
 
     ptree UpdateDetectedObjects(const std::vector<DetectedObjectPtr>& detectobjectsworld, const bool sendtocontroller=false);
 

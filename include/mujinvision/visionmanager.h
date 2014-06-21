@@ -103,7 +103,7 @@ public:
 
     /** \brief Saves a snapshot for each sensor mapped to the region. If detection was called before, snapshots of the images used for the last detection will be saved. Images are saved to the visionmanager application directory.
      */
-    virtual ptree SaveSnapshot(const std::string& regionname) = 0;
+    virtual ptree SaveSnapshot(const std::string& regionname, const bool getlatest=true) = 0;
 
     /** \brief Updates the locally maintained list of the detected objects
         \param detectedobjectsworld detection result in world frame
