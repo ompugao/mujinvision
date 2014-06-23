@@ -58,6 +58,9 @@ public:
     void Initialize(const std::map<std::string, CameraPtr >&mNameCamera, const std::vector<ImageSubscriberPtr>&subscribers) {
     }
 
+    void DeInitialize() {
+    }
+
     ColorImagePtr GetColorImage(const std::string& cameraname, unsigned long long& timestamp)
     {
         return ColorImagePtr();
@@ -99,6 +102,9 @@ public:
     }
 
     void Initialize(const ptree& oparams_pt,  const ptree& dparams_pt, RegionConstPtr region, std::map<std::string, CameraPtr > mColorCamera, std::map<std::string, CameraPtr > mDepthCamera ) {
+    }
+
+    void DeInitialize() {
     }
 
     void DetectObjects(const std::string& colorcameraname, const std::string& depthcameraname, std::vector<DetectedObjectPtr>& detectedobjects) {

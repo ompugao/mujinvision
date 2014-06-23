@@ -219,6 +219,8 @@ private:
         MS_Aborted=7,
     };
 
+    void _DeInitialize();
+    
     void _SetStatusMessage(const std::string& msg);
     void _SetStatus(ManagerStatus status, const std::string& msg="", const bool disableInterrupt=false);
 
@@ -305,6 +307,8 @@ private:
     std::string _GetStatusJsonString(const unsigned long long timestamp, const std::string& status, const std::string& message);
 
     boost::array<std::string,8> _vStatusDescriptions;
+
+    bool _initialized;
 
     ControllerClientPtr _pControllerClient;
     SceneResourcePtr _pSceneResource;

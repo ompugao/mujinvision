@@ -36,6 +36,8 @@ public:
      */
     virtual void Initialize(const std::map<std::string, CameraPtr >&mNameCamera, const std::vector<ImageSubscriberPtr>&subscribers) = 0;
 
+    virtual void DeInitialize() = 0;
+
     /** \brief Gets the latest color image from camera and its timestamp.
         \param cameraname name of the camera
         \param timestamp timestamp of the color image

@@ -39,6 +39,8 @@ public:
      */
     virtual void Initialize(const ptree& oparams_pt,  const ptree& dparams_pt, RegionConstPtr region, std::map<std::string, CameraPtr > mColorCamera, std::map<std::string, CameraPtr > mDepthCamera ) = 0;
 
+    virtual void DeInitialize() = 0;
+
     /** Detects objects from color and depth images. Assuming SetColorImage and mMergedDepthImage were called.
         \param colorcameraname
         \param depthcameraname

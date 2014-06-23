@@ -29,6 +29,7 @@ protected:
 
 MujinVisionManager::MujinVisionManager(ImageSubscriberManagerPtr imagesubscribermanager, DetectorManagerPtr detectormanager, const std::string& visionmanagerConfigFilename)
 {
+    _initialized = false;
     _pImagesubscriberManager = imagesubscribermanager;
     _pDetectorManager = detectormanager;
     _vStatusDescriptions[MS_Lost] = "lost";
@@ -210,6 +211,12 @@ void MujinVisionManager::_ExecuteUserCommand(const ptree& command_pt, std::strin
     }
     std::string command = command_pt.get<std::string>("command");
     if (command == "Initialize") {
+        if (_initialized) {
+            _SetStatusMessage("Vision manager was initialized, de-initialize it first.");
+            _DeInitialize();
+        } else {
+            _initialized = true;
+        }
         result_pt = Initialize(command_pt.get<std::string>("detectorConfigurationFilename"),
                                command_pt.get<std::string>("imagesubscriberConfigurationFilename"),
                                command_pt.get<std::string>("mujinControllerIp"),
@@ -467,10 +474,13 @@ void MujinVisionManager::_StartDetectionThread(const std::string& regionname, co
 
 void MujinVisionManager::_StopDetectionThread()
 {
+    _SetStatusMessage("Stopping detectoin thread.");
     if (!_bStopDetectionThread) {
         _bStopDetectionThread = true;
-        _pDetectionThread->join();
-        std::cout << "Stopped detection thread." << std::endl;
+        if (!!_pDetectionThread) {
+            _pDetectionThread->join();
+            _SetStatusMessage("Stopped detection thread.");
+        }
     }
 }
 
@@ -938,6 +948,13 @@ ptree MujinVisionManager::Initialize(const std::string& detectorConfigFilename, 
     read_json(detectorConfigFilename, pt);
     _pDetector = _pDetectorManager->CreateObjectDetector(pt.get_child("object"),pt.get_child("detection"), region, _mNameColorCamera, _mNameDepthCamera,boost::bind(&MujinVisionManager::_SetStatusMessage,this,_1));
     return _GetResultPtree(MS_Succeeded);
+}
+
+void MujinVisionManager::_DeInitialize()
+{
+    _StopDetectionThread();
+    _pDetector->DeInitialize();
+    _pImagesubscriberManager->DeInitialize();
 }
 
 ptree MujinVisionManager::DetectObjects(const std::string& regionname, const std::vector<std::string>&cameranames, std::vector<DetectedObjectPtr>&detectedobjects)
