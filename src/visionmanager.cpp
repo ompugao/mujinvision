@@ -925,11 +925,7 @@ ptree MujinVisionManager::Initialize(const std::string& detectorConfigFilename, 
     for (unsigned int i=0; i<_pVisionServerParameters->streamerConnections.size(); i++) {
         _vSubscribers.push_back(_pImagesubscriberManager->CreateImageSubscriber(_pVisionServerParameters->streamerConnections[i]->ip, _pVisionServerParameters->streamerConnections[i]->port, pt.get_child("zmq_subscriber")));
     }
-    if (!!_pImagesubscriberManager) {
-        // FIXME: assuming imagesubscribers are alreadly initialized, don't do anything
-    } else {
-        _pImagesubscriberManager->Initialize(_mNameCamera, _vSubscribers);
-    }
+    _pImagesubscriberManager->Initialize(_mNameCamera, _vSubscribers);
 
     _numDepthImagesToAverage = pt.get_child("zmq_subscriber").get<unsigned int>("num_depth_images_to_average"); // assuming each message has one depth image
 
