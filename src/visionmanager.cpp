@@ -721,14 +721,11 @@ void MujinVisionManager::_SyncCamera(const std::string& regionname, const std::s
     // compute image roi
     Transform O_T_B = _GetTransform(regionname); // region transform in world frame
     Transform C_T_O = O_T_C.inverse(); // world origin in camera frame
+    Transform B_T_Bvertex[8]; // box vertex transforms in region frame
     Transform O_T_Bvertex[8]; // box vertex transforms in world frame
     Transform C_T_Bvertex[8]; // box vertex transforms in camera frame
-    // initialize all vertices with box transform
-    for (unsigned int i=0; i<8; i++) {
-        O_T_Bvertex[i] = O_T_B;
-    }
     // get globalroi3d
-    double globalroi3d[6]; //= { 0.0, 0.33, 0.0, 0.69, 0.0, 0.21}; // minx maxx miny maxy minz maxz
+    double globalroi3d[6]; // minx maxx miny maxy minz maxz in region frame
     globalroi3d[0] = _mNameRegion[regionname]->pRegionParameters->minx;
     globalroi3d[1] = _mNameRegion[regionname]->pRegionParameters->maxx;
     globalroi3d[2] = _mNameRegion[regionname]->pRegionParameters->miny;
@@ -737,14 +734,23 @@ void MujinVisionManager::_SyncCamera(const std::string& regionname, const std::s
     globalroi3d[5] = _mNameRegion[regionname]->pRegionParameters->maxz;
     // update vertices with globalroi3d
     unsigned int index=0;
+    //    .3--------1 z  
+    //  .' |      .'| 
+    // 7---+----5'  | 
+    // |   |    |   | 
+    // |y ,2----+---0 o
+    // |.'      | .'  
+    // 6--------4'    
+    //         x
     for (unsigned int i=0; i<2; i++) {
         for (unsigned int j=2; j<4; j++) {
             for (unsigned int k=4; k<6; k++) {
-                O_T_Bvertex[index].trans[1] += globalroi3d[j];
-                O_T_Bvertex[index].trans[0] += globalroi3d[i];
-                O_T_Bvertex[index].trans[2] += globalroi3d[k];
-                //std::cout << "vertex " << index << " " << O_T_Bvertex[index].trans[0] << ", " << O_T_Bvertex[index].trans[1] << ", " << O_T_Bvertex[index].trans[2] << std::endl;
-                C_T_Bvertex[index] = C_T_O * O_T_Bvertex[index];
+                B_T_Bvertex[index].trans[0] = globalroi3d[i];
+                B_T_Bvertex[index].trans[1] = globalroi3d[j];
+                B_T_Bvertex[index].trans[2] = globalroi3d[k];
+                O_T_Bvertex[index] = O_T_B * B_T_Bvertex[index];
+                //std::cout << "vertex " << index << " (" << B_T_Bvertex[index].trans[0] << ", " << B_T_Bvertex[index].trans[1] << ", " << B_T_Bvertex[index].trans[2] << ") (" << O_T_Bvertex[index].trans[0] << ", " << O_T_Bvertex[index].trans[1] << ", " << O_T_Bvertex[index].trans[2] << ")" << std::endl;
+                C_T_Bvertex[index] = C_T_O * (O_T_B * B_T_Bvertex[index]);
                 index++;
             }
         }
@@ -784,14 +790,85 @@ void MujinVisionManager::_SyncRegion(const std::string& regionname)
     // update globalroi3d from mujin controller
     if (!_mNameRegion[regionname]->pRegionParameters->bInitializedRoi) {
         std::cout << "Computing globalroi3d from mujin controller." << std::endl;
-        BinPickingTaskResource::ResultAABB aabb;
-        _pBinpickingTask->GetAABB(regionname, aabb, "m");
-        _mNameRegion[regionname]->pRegionParameters->minx = 0;
-        _mNameRegion[regionname]->pRegionParameters->maxx = aabb.extents[0]*2;
-        _mNameRegion[regionname]->pRegionParameters->miny = 0;
-        _mNameRegion[regionname]->pRegionParameters->maxy = aabb.extents[1]*2;
-        _mNameRegion[regionname]->pRegionParameters->minz = 0;
-        _mNameRegion[regionname]->pRegionParameters->maxz = aabb.extents[2]*2;
+        // get axis aligned bounding box for region
+        BinPickingTaskResource::ResultAABB raabb;
+        _pBinpickingTask->GetAABB(regionname, raabb, "m");
+        //                0                    2                    4
+        //                x                    y                    z
+        double aabb[6] = {0,raabb.extents[0]*2,0,raabb.extents[1]*2,0,raabb.extents[2]*2};
+        double center[3] = {raabb.pos[0], raabb.pos[1], raabb.pos[2]};
+        
+        // need to prepare offets to calculate vertices positions
+        Transform O_T_B = _GetTransform(regionname); // region origin in world frame
+        TransformMatrix m_O_T_B(O_T_B);
+        // top left            top right      |---> y world frame
+        // bottom left         bottom right   v
+        //                                    x
+        if (m_O_T_B.trans[0]-center[0]<0 && m_O_T_B.trans[1]-center[1]<0) { // top left
+        } else if (m_O_T_B.trans[0]-center[0]<0 && m_O_T_B.trans[1]-center[1]>0) { // top right
+            // flip y
+            aabb[3] = -aabb[3];
+        } else if (m_O_T_B.trans[0]-center[0]>0 && m_O_T_B.trans[1]-center[1]<0) { // bottom left
+            // flip x
+            aabb[1] = -aabb[1];
+        } else if (m_O_T_B.trans[0]-center[0]>0 && m_O_T_B.trans[1]-center[1]>0) { // bottom right
+            // flip x and y
+            aabb[1] = -aabb[1];
+            aabb[3] = -aabb[3];
+        }
+        //std::cout << "trans " << m_O_T_B.trans[0] << ", " << m_O_T_B.trans[1] << ", " << m_O_T_B.trans[2] <<  " pos " << center[0] << ", " << center[1]<< ", " << center[2] << " aabb " << aabb[0] << ", " << aabb[1] << ", " << aabb[2] << ", " << aabb[3] << ", " << aabb[4] << ", " << aabb[5] << std::endl;
+        Transform O_T_Bvertex[8]; // region vertices in world frame
+        Transform B_T_Bvertex[8]; // region vertices in region frame
+        for (unsigned int i=0; i<8; i++) {
+            O_T_Bvertex[i] = O_T_B;
+        }
+        unsigned int index=0;
+        double minx,maxx,miny,maxy,minz,maxz; // roi in region frame
+        // order of vertices
+        //    .3--------1 z  
+        //  .' |      .'| 
+        // 7---+----5'  | 
+        // |   |    |   | 
+        // |y ,2----+---0 o  world frame
+        // |.'      | .'  
+        // 6--------4'    
+        //         x
+        for (unsigned int i=0; i<2; i++) {
+            for (unsigned int j=2; j<4; j++) {
+                for (unsigned int k=4; k<6; k++) {
+                    // update vertices positions in world frame
+                    O_T_Bvertex[index].trans[0] += aabb[i];
+                    O_T_Bvertex[index].trans[1] += aabb[j];
+                    O_T_Bvertex[index].trans[2] += aabb[k];
+                    // calculate vertices positions in region frame
+                    B_T_Bvertex[index] = O_T_B.inverse() * O_T_Bvertex[index];
+                    // calculate the roi in region frame
+                    if (index==0) {
+                        minx=B_T_Bvertex[index].trans[0];
+                        maxx=B_T_Bvertex[index].trans[0];
+                        miny=B_T_Bvertex[index].trans[1];
+                        maxy=B_T_Bvertex[index].trans[1];
+                        minz=B_T_Bvertex[index].trans[2];
+                        maxz=B_T_Bvertex[index].trans[2];
+                    } else {
+                        minx = std::min(minx, B_T_Bvertex[index].trans[0]);
+                        maxx = std::max(maxx, B_T_Bvertex[index].trans[0]);
+                        miny = std::min(miny, B_T_Bvertex[index].trans[1]);
+                        maxy = std::max(maxy, B_T_Bvertex[index].trans[1]);
+                        minz = std::min(minz, B_T_Bvertex[index].trans[2]);
+                        maxz = std::max(maxz, B_T_Bvertex[index].trans[2]);
+                    }
+                    index++;
+                }
+            }
+        }
+        std::cout << "initialized " << regionname << "\'s roi in region frame: " << minx << " " << maxx << " " << miny << " " << maxy << " " << minz << " " << maxz << std::endl;
+        _mNameRegion[regionname]->pRegionParameters->minx = minx;
+        _mNameRegion[regionname]->pRegionParameters->maxx = maxx;
+        _mNameRegion[regionname]->pRegionParameters->miny = miny;
+        _mNameRegion[regionname]->pRegionParameters->maxy = maxy;
+        _mNameRegion[regionname]->pRegionParameters->minz = minz;
+        _mNameRegion[regionname]->pRegionParameters->maxz = maxz;
         _mNameRegion[regionname]->pRegionParameters->bInitializedRoi = true;
         std::cout << _mNameRegion[regionname]->pRegionParameters->GetJsonString() << std::endl;
     }
