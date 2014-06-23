@@ -509,7 +509,7 @@ void MujinVisionManager::_DetectionThread(const std::string& regionname, const s
             Vector position = transform.trans;
 
             if (_vDetectedMeanPosition.size() > 0) {
-                for (unsigned int j = _vDetectedMeanPosition.size() - 1; j >= 0; j--) { // have to iterate from the end to remove items from the vectors
+                for (int j = _vDetectedMeanPosition.size() - 1; j >= 0; j--) { // have to iterate from the end to remove items from the vectors
                     double dist = std::sqrt(((position-_vDetectedMeanPosition.at(j))*weights).lengthsqr3());
                     std::cout << "Part " << j << " distance to object " << dist << std::endl;
                     if (dist < _pVisionServerParameters->clearRadius) {
