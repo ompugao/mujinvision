@@ -734,13 +734,13 @@ void MujinVisionManager::_SyncCamera(const std::string& regionname, const std::s
     globalroi3d[5] = _mNameRegion[regionname]->pRegionParameters->maxz;
     // update vertices with globalroi3d
     unsigned int index=0;
-    //    .3--------1 z  
-    //  .' |      .'| 
-    // 7---+----5'  | 
-    // |   |    |   | 
+    //    .3--------1 z
+    //  .' |      .'|
+    // 7---+----5'  |
+    // |   |    |   |
     // |y ,2----+---0 o
-    // |.'      | .'  
-    // 6--------4'    
+    // |.'      | .'
+    // 6--------4'
     //         x
     for (unsigned int i=0; i<2; i++) {
         for (unsigned int j=2; j<4; j++) {
@@ -797,7 +797,7 @@ void MujinVisionManager::_SyncRegion(const std::string& regionname)
         //                x                    y                    z
         double aabb[6] = {0,raabb.extents[0]*2,0,raabb.extents[1]*2,0,raabb.extents[2]*2};
         double center[3] = {raabb.pos[0], raabb.pos[1], raabb.pos[2]};
-        
+
         // need to prepare offets to calculate vertices positions
         Transform O_T_B = _GetTransform(regionname); // region origin in world frame
         TransformMatrix m_O_T_B(O_T_B);
@@ -825,13 +825,13 @@ void MujinVisionManager::_SyncRegion(const std::string& regionname)
         unsigned int index=0;
         double minx,maxx,miny,maxy,minz,maxz; // roi in region frame
         // order of vertices
-        //    .3--------1 z  
-        //  .' |      .'| 
-        // 7---+----5'  | 
-        // |   |    |   | 
+        //    .3--------1 z
+        //  .' |      .'|
+        // 7---+----5'  |
+        // |   |    |   |
         // |y ,2----+---0 o  world frame
-        // |.'      | .'  
-        // 6--------4'    
+        // |.'      | .'
+        // 6--------4'
         //         x
         for (unsigned int i=0; i<2; i++) {
             for (unsigned int j=2; j<4; j++) {
@@ -1036,6 +1036,7 @@ void MujinVisionManager::_DeInitialize()
 
 ptree MujinVisionManager::DetectObjects(const std::string& regionname, const std::vector<std::string>&cameranames, std::vector<DetectedObjectPtr>&detectedobjects)
 {
+    uint64_t starttime = GetMilliTime();
     // TODO: use actual cameras
     std::string colorcameraname = _GetColorCameraNames(regionname, cameranames).at(0);
     std::string depthcameraname = _GetDepthCameraNames(regionname, cameranames).at(0);
@@ -1051,9 +1052,9 @@ ptree MujinVisionManager::DetectObjects(const std::string& regionname, const std
     // detect objects
     _pDetector->DetectObjects(colorcameraname, depthcameraname, detectedobjects);
     std::stringstream msgss;
-    msgss << "Detected " << detectedobjects.size() << " objects.";
+    msgss << "Detected " << detectedobjects.size() << " objects. Took " << (GetMilliTime()-starttime)/1000.0f << " seconds.";
     _SetStatusMessage(msgss.str());
-     return _GetResultPtree(MS_Succeeded);
+    return _GetResultPtree(MS_Succeeded);
 }
 
 ptree MujinVisionManager::StartDetectionLoop(const std::string& regionname, const std::vector<std::string>&cameranames,const double voxelsize, const double pointsize)
