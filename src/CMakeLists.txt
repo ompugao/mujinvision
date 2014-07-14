@@ -14,7 +14,7 @@
 include_directories(${MUJINVISION_INCLUDE_LOCAL_DIRS} ${libzmq_INCLUDE_DIRS} ${MujinControllerClient_INCLUDE_DIRS})
 link_directories(${MUJINVISION_LINK_DIRS} ${libzmq_LIBRARY_DIRS} ${MujinControllerClient_LIBRARY_DIRS})
 
-set(SOURCE_FILES mujinzmq.cpp visionmanager.cpp)
+set(SOURCE_FILES mujinzmq.cpp mujinvisionmanager.cpp)
 
 add_library(libmujinvision SHARED ${SOURCE_FILES})
 

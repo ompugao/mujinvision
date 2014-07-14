@@ -14,20 +14,24 @@
 /** \file visionmanagerimpl.h
     \brief Public headers of MujinVisionManager.
  */
-#ifndef MUJIN_VISION_MANAGER_IMPL_H
-#define MUJIN_VISION_MANAGER_IMPL_H
+#ifndef MUJIN_VISION_MANAGER_H
+#define MUJIN_VISION_MANAGER_H
 
-#include <mujinvision/visionmanager.h>
+#include <mujincontrollerclient/binpickingtask.h>
+#include <mujinvision/visionparameters.h>
 #include <mujinvision/mujinzmq.h>
 #include <mujinvision/imagesubscribermanager.h>
 #include <mujinvision/detectormanager.h>
 
 #include <queue>
 #include <boost/filesystem.hpp>
+#include <boost/thread.hpp>
 
 namespace mujinvision {
 
-class MUJINVISION_API MujinVisionManager : public VisionManager
+using namespace mujinclient;
+
+class MUJINVISION_API MujinVisionManager
 {
 public:
     MujinVisionManager(ImageSubscriberManagerPtr imagesubscribermanager, DetectorManagerPtr detectormanager, const std::string& visionmanagerConfigurationFilename);
@@ -313,6 +317,7 @@ private:
     ControllerClientPtr _pControllerClient;
     SceneResourcePtr _pSceneResource;
     VisionServerParametersPtr _pVisionServerParameters;
+    BinPickingTaskResourcePtr _pBinpickingTask;
 
     std::queue<ManagerStatus> _statusQueue;
     std::queue<std::string> _messageQueue;
