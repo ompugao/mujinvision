@@ -335,7 +335,13 @@ struct MUJINVISION_API CameraParameters : public ParametersBase // TODO: auto co
             minv = roi[2];
             maxv = roi[3];
         }
-
+        xs.resize(8);
+        ys.resize(8);
+        for (unsigned int i=0; i<8; i++) {
+            xs[i] = -1;
+            ys[i] = -1;
+        }
+        
         isColorCamera = pt.get<bool>("is_color_camera", true);
         isDepthCamera = pt.get<bool>("is_depth_camera", true);
     }
@@ -349,6 +355,8 @@ struct MUJINVISION_API CameraParameters : public ParametersBase // TODO: auto co
     bool isDepthCamera;
     /// \brief image roi in pixel
     int minu,maxu,minv,maxv;
+    /// \brief 2d projections of 3d roi
+    std::vector<int> xs,ys;
 
     std::string GetJsonString()
     {

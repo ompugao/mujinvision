@@ -745,6 +745,12 @@ void MujinVisionManager::_SyncCamera(const std::string& regionname, const std::s
     // project vertices into image
     std::vector<double> pxlist, pylist;
     double x,y,px,py;
+    int minu, maxu, minv, maxv;
+    const int image_width  = sensordata.image_dimensions[0];
+    const int image_height  = sensordata.image_dimensions[1];
+    minu=image_width; maxu=0; 
+    minv=image_height; maxv=0;
+    CameraPtr camera = _mNameCamera[cameraname];
     for (unsigned int i=0; i<8; i++) {
         x = C_T_Bvertex[i].trans[0] / C_T_Bvertex[i].trans[2];
         y = C_T_Bvertex[i].trans[1] / C_T_Bvertex[i].trans[2];
@@ -752,14 +758,31 @@ void MujinVisionManager::_SyncCamera(const std::string& regionname, const std::s
         py = sensordata.intrinsic[3] * x  + sensordata.intrinsic[4] * y + sensordata.intrinsic[5];
         pxlist.push_back(px);
         pylist.push_back(py);
+        if (px < minu) {
+            minu = px;
+        }
+        if (px > maxu) {
+            maxu = px;
+        }
+        if (py < minv) {
+            minv = py;
+        }
+        if (py > maxv) {
+            maxv = py;
+        }
     }
+    // order and save 2d projection of 3d roi
+    int order[] = {0,2,6,4,1,3,7,5};
+    for (unsigned int i=0; i<8; i++) {
+        camera->pCameraParameters->xs[i] = pxlist[order[i]];
+        camera->pCameraParameters->ys[i] = pylist[order[i]];
+    }
+
     // need to make sure roi is within image boundary
-    const int image_width  = sensordata.image_dimensions[0];
-    const int image_height  = sensordata.image_dimensions[1];
-    _mNameCamera[cameraname]->pCameraParameters->minu = std::max(int(*std::min_element(pxlist.begin(),pxlist.end())), 0);
-    _mNameCamera[cameraname]->pCameraParameters->maxu = std::min(int(*std::max_element(pxlist.begin(),pxlist.end())), image_width);
-    _mNameCamera[cameraname]->pCameraParameters->minv = std::max(int(*std::min_element(pylist.begin(),pylist.end())), 0);
-    _mNameCamera[cameraname]->pCameraParameters->maxv = std::min(int(*std::max_element(pylist.begin(),pylist.end())), image_height);
+    _mNameCamera[cameraname]->pCameraParameters->minu = std::max(minu, 0);
+    _mNameCamera[cameraname]->pCameraParameters->maxu = std::min(maxu, image_width);
+    _mNameCamera[cameraname]->pCameraParameters->minv = std::max(minv, 0);
+    _mNameCamera[cameraname]->pCameraParameters->maxv = std::min(maxv, image_height);;
     std::cout << "image_roi: " << _mNameCamera[cameraname]->pCameraParameters->minu << ", " << _mNameCamera[cameraname]->pCameraParameters->maxu << ", " << _mNameCamera[cameraname]->pCameraParameters->minv << ", "<< _mNameCamera[cameraname]->pCameraParameters->maxv << std::endl;
 }
 
