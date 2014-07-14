@@ -518,20 +518,13 @@ void MujinVisionManager::_DetectionThread(const std::string& regionname, const s
             Transform transform = _GetTransform(pickedpositions.transforms[i]);
             Vector position = transform.trans;
 
-            if (_vDetectedMeanPosition.size() > 0) {
-                for (int j = _vDetectedMeanPosition.size() - 1; j >= 0; j--) { // have to iterate from the end to remove items from the vectors
-                    double dist = std::sqrt(((position-_vDetectedMeanPosition.at(j))*weights).lengthsqr3());
+            if (_vDetectedInfo.size()>0) {
+                for (int j = _vDetectedInfo.size() - 1; j >= 0; j--) { // have to iterate from the end to remove items from the vectors
+                    double dist = std::sqrt(((position-_vDetectedInfo.at(j).meanPosition)*weights).lengthsqr3());
                     std::cout << "Part " << j << " distance to object " << dist << std::endl;
                     if (dist < _pVisionServerParameters->clearRadius) {
                         std::cout << "Part " << j << " is within the clear radius of picked position, clear its records." << std::endl;
-                        _vDetectedTimestamp.erase(_vDetectedTimestamp.begin()+j);
-                        _vDetectedCount.erase(_vDetectedCount.begin()+j);
-                        _vDetectedMeanScore.erase(_vDetectedMeanScore.begin()+j);
-                        _vDetectedMeanPosition.erase(_vDetectedMeanPosition.begin()+j);
-                        _vDetectedMeanRotation.erase(_vDetectedMeanRotation.begin()+j);
-                        _vDetectedPositions.erase(_vDetectedPositions.begin()+j);
-                        _vDetectedRotations.erase(_vDetectedRotations.begin()+j);
-                        _vDetectedScores.erase(_vDetectedScores.begin()+j);
+                        _vDetectedInfo.erase(_vDetectedInfo.begin()+j);
                     }
                 }
             }
@@ -582,47 +575,45 @@ void MujinVisionManager::_DetectionThread(const std::string& regionname, const s
                 rotation[3] = -transform.rot[2];
             }
 
-            for (unsigned int j=0; j<_vDetectedMeanPosition.size(); j++) {
-                double dist = std::sqrt(((position-_vDetectedMeanPosition[j])*weights).lengthsqr3());
+            for (unsigned int j=0; j<_vDetectedInfo.size(); j++) {
+                double dist = std::sqrt(((position-_vDetectedInfo[j].meanPosition)*weights).lengthsqr3());
                 if (dist < minDist) {
                     minDist = dist;
                     minIndex = j;
                 }
             }
-            // if min distance is less than max position error, treat it as known object
             if (minDist < _pVisionServerParameters->maxPositionError) {
-                _vDetectedCount[minIndex]++;
+                _vDetectedInfo.at(minIndex).count++;
                 unsigned int numDetections;
                 // only keep track of the last n detection results
-                if (_vDetectedCount[minIndex] <= _pVisionServerParameters->numDetectionsToKeep) {
-                    _vDetectedPositions[minIndex].push_back(position);
-                    _vDetectedRotations[minIndex].push_back(rotation);
-                    _vDetectedScores[minIndex].push_back(score);
-                    numDetections = _vDetectedCount[minIndex];
+                if (_vDetectedInfo.at(minIndex).count <= _pVisionServerParameters->numDetectionsToKeep) {
+                    _vDetectedInfo.at(minIndex).positions.push_back(position);
+                    _vDetectedInfo.at(minIndex).rotations.push_back(rotation);
+                    _vDetectedInfo.at(minIndex).scores.push_back(score);
+                    numDetections = _vDetectedInfo.at(minIndex).count;
                 } else {
                     numDetections = _pVisionServerParameters->numDetectionsToKeep;
-                    unsigned int newindex = _vDetectedCount[minIndex]% numDetections;
-                    _vDetectedPositions[minIndex][newindex] = position;
-                    _vDetectedRotations[minIndex][newindex] = rotation;
-                    _vDetectedScores[minIndex][newindex] = score;
+                    unsigned int newindex = _vDetectedInfo.at(minIndex).count% numDetections;
+                    _vDetectedInfo.at(minIndex).positions.at(newindex) = position;
+                    _vDetectedInfo.at(minIndex).rotations.at(newindex) = rotation;
+                    _vDetectedInfo.at(minIndex).scores.at(newindex) = score;
                 }
                 std::cout << "Part " << minIndex << " is known (minDist " << minDist << "), updating its mean position averaging " << numDetections << " detections." << std::endl;
 
                 // update timestamp
-                _vDetectedTimestamp[minIndex] = timestamp;
+                _vDetectedInfo.at(minIndex).timestamp = timestamp;
                 // update means
                 Vector sumPosition(0,0,0);
                 for (unsigned int j=0; j<numDetections; j++) {
-                    sumPosition += _vDetectedPositions[minIndex][j];
+                    sumPosition += _vDetectedInfo.at(minIndex).positions.at(j);
                 }
-                _vDetectedMeanPosition[minIndex] = sumPosition * (1.0f/numDetections);
-                //std::cout << "Part " << minIndex << " mean position: " << _vDetectedMeanPosition[minIndex][0] << ", " << _vDetectedMeanPosition[minIndex][1] << ", " << _vDetectedMeanPosition[minIndex][2] << std::endl;
+                _vDetectedInfo.at(minIndex).meanPosition = sumPosition * (1.0f/numDetections);
                 double minQuatDotProduct = 999;
                 int minQuatIndex = -1;
                 for (unsigned int j=0; j<numDetections; j++) {
                     double sum = 0;
                     for (unsigned int k=0; k<numDetections; k++) {
-                        sum += 1- _vDetectedRotations[minIndex][j].dot(_vDetectedRotations[minIndex][k]);
+                        sum += 1- _vDetectedInfo.at(minIndex).rotations.at(j).dot(_vDetectedInfo.at(minIndex).rotations.at(k));
                     }
                     double quatDotProduct = sum / numDetections;
                     if (quatDotProduct < minQuatDotProduct) {
@@ -630,44 +621,38 @@ void MujinVisionManager::_DetectionThread(const std::string& regionname, const s
                         minQuatIndex = j;
                     }
                 }
-                _vDetectedMeanRotation[minIndex] = _vDetectedRotations[minIndex][minQuatIndex];
-                //std::cout << "Part " << minIndex << " mean rotation: " << _vDetectedMeanRotation[minIndex][0] << ", " << _vDetectedMeanRotation[minIndex][1] << ", " << _vDetectedMeanRotation[minIndex][2] << ", " << _vDetectedMeanRotation[minIndex][3] << std::endl;
+                _vDetectedInfo.at(minIndex).meanRotation = _vDetectedInfo.at(minIndex).rotations.at(minQuatIndex);
                 double sumScore=0;
                 for (unsigned int j=0; j<numDetections; j++) {
-                    sumScore += _vDetectedScores[minIndex][j];
+                    sumScore += _vDetectedInfo.at(minIndex).scores.at(j);
                 }
-                _vDetectedMeanScore[minIndex] = sumScore / numDetections;
+                _vDetectedInfo.at(minIndex).meanScore = sumScore / numDetections;
             } else { // new object is detected
                 std::cout << "New object is detected at (" << rotation[0] << ", " << rotation[1] << ", " << rotation[2] << ", " << rotation[3] << " ," <<  position[0] << ", " << position[1] << ", " << position[2] << ")" << std::endl;
-                _vDetectedCount.push_back(1);
                 std::vector<Vector> positions;
                 positions.push_back(position);
-                _vDetectedPositions.push_back(positions);
                 std::vector<Vector> rotations;
                 rotations.push_back(rotation);
-                _vDetectedRotations.push_back(rotations);
                 std::vector<double> scores;
                 scores.push_back(score);
-                _vDetectedScores.push_back(scores);
-                _vDetectedTimestamp.push_back(timestamp);
-                _vDetectedMeanPosition.push_back(position);
-                _vDetectedMeanRotation.push_back(rotation);
-                _vDetectedMeanScore.push_back(score);
+                DetectedInfo info;
+                info.timestamp = timestamp;
+                info.count = 1;
+                info.meanPosition = position;
+                info.meanRotation = rotation;
+                info.meanScore = score;
+                info.positions = positions;
+                info.rotations = rotations;
+                info.scores = scores;
+                _vDetectedInfo.push_back(info);
             }
         }
-        if (_vDetectedPositions.size()>0) {
+        if (_vDetectedInfo.size()>0) {
             // remove old detection results
-            for (int i=_vDetectedPositions.size()-1; i>=0; i--) {
-                if (GetMilliTime() - _vDetectedTimestamp[i] > _pVisionServerParameters->timeToRemember) {
+            for (int i=_vDetectedInfo.size()-1; i>=0; i--) {
+                if (GetMilliTime() - _vDetectedInfo.at(i).timestamp > _pVisionServerParameters->timeToRemember) {
                     std::cout << "Part " << i << " has not been seen for " << _pVisionServerParameters->timeToRemember << " ms, removing its records." << std::endl;
-                    _vDetectedTimestamp.erase(_vDetectedTimestamp.begin()+i);
-                    _vDetectedCount.erase(_vDetectedCount.begin()+i);
-                    _vDetectedMeanScore.erase(_vDetectedMeanScore.begin()+i);
-                    _vDetectedMeanPosition.erase(_vDetectedMeanPosition.begin()+i);
-                    _vDetectedMeanRotation.erase(_vDetectedMeanRotation.begin()+i);
-                    _vDetectedPositions.erase(_vDetectedPositions.begin()+i);
-                    _vDetectedRotations.erase(_vDetectedRotations.begin()+i);
-                    _vDetectedScores.erase(_vDetectedScores.begin()+i);
+                    _vDetectedInfo.erase(_vDetectedInfo.begin()+i);
                 }
             }
         }
@@ -675,11 +660,11 @@ void MujinVisionManager::_DetectionThread(const std::string& regionname, const s
         // create new results
         std::vector<DetectedObjectPtr> newdetectedobjects;
         if (detectedobjects.size()>0) {
-            for (unsigned int i=0; i<_vDetectedPositions.size(); i++) {
+            for (unsigned int i=0; i<_vDetectedInfo.size(); i++) {
                 Transform transform;
-                transform.trans = _vDetectedMeanPosition[i];
-                transform.rot = _vDetectedMeanRotation[i];
-                DetectedObjectPtr obj(new DetectedObject(detectedobjects[0]->name, transform, _vDetectedMeanScore[i]));
+                transform.trans = _vDetectedInfo.at(i).meanPosition;
+                transform.rot = _vDetectedInfo.at(i).meanRotation;
+                DetectedObjectPtr obj(new DetectedObject(detectedobjects[0]->name, transform, _vDetectedInfo.at(i).meanScore));
                 newdetectedobjects.push_back(obj);
                 obj->Print();
             }
@@ -689,7 +674,6 @@ void MujinVisionManager::_DetectionThread(const std::string& regionname, const s
         if (_bStopDetectionThread) {
             break;
         }
-        //std::vector<DetectedObjectPtr> newdetectedobjects = detectedobjects;
         std::cout << "Sending " << newdetectedobjects.size() << " detected objects to the mujin controller." << std::endl;
         SendPointCloudObstacleToController(regionname, cameranames, newdetectedobjects, voxelsize, pointsize);
         UpdateDetectedObjects(newdetectedobjects, true);

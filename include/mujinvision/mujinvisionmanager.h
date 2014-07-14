@@ -223,6 +223,17 @@ private:
         MS_Aborted=7,
     };
 
+    struct DetectedInfo {
+        unsigned long long timestamp; ///< timestamp of part's last detection.
+        unsigned int count; ///< count is the number of detections of part.
+        Vector meanPosition; ///< meanPosition is the mean position of part's history of detected positions.
+        Vector meanRotation; ///< meanRotation is the mean rotation of part's history of detected rotations.
+        double meanScore; ///< meanScore is the mean score of part's detection.
+        std::vector<Vector> positions; ///< positions is part's history of detected positions. positions[i] is the i'th history of part's XYZ position.
+        std::vector<Vector> rotations; ///< rotations is part's history of detected rotations. rotation[i] is the i'th history of part's rotation.
+        std::vector<double> scores; ///< scores is part's history of detection confidence. rotation[i] is the i'th history of part's score.
+    };
+
     void _DeInitialize();
     
     void _SetStatusMessage(const std::string& msg);
@@ -349,15 +360,8 @@ private:
     DetectorManagerPtr _pDetectorManager;
 
     std::set<unsigned long long> _sTimestamp; ///< set of saved timestamp in millisecond
-    std::vector<unsigned long long> _vDetectedTimestamp; ///< _vDetectedTimestamp[i] is the timestamp of part i's last detection.
-    std::vector<unsigned int> _vDetectedCount; ///< _vDetectedCount[i] is the number of detections of part i.
-    std::vector<Vector> _vDetectedMeanPosition; ///< _vDetectedMeanPosition[i] is the mean position of part i's history of detected positions.
-    std::vector<Vector> _vDetectedMeanRotation; ///< _vDetectedMeanRotation[i] is the mean rotation of part i's history of detected rotations.
-    std::vector<double> _vDetectedMeanScore; ///< _vDetectedScore[i] is the mean score of part i's detection.
-    std::vector<std::vector<Vector> > _vDetectedPositions; ///< _vDetectedPositions[i] is part i's history of detected positions. _vDetectedPositions[i][j] is the j'th history of part i's XYZ position.
-    std::vector<std::vector<Vector> > _vDetectedRotations; ///< _vDetectedRotations[i] is part i's history of detected rotations. _vDetectedRotation[i][j] is the j'th history of part i's rotation.
-    std::vector<std::vector<double> > _vDetectedScores; ///< _vDetectedScores[i] is part i's history of detection confidence. _vDetectedRotation[i][j] is the j'th history of part i's score.
-
+    std::vector<DetectedInfo> _vDetectedInfo;
+    
     bool _bStopStatusThread;
     bool _bStopDetectionThread;
     bool _bCancelCommand;
