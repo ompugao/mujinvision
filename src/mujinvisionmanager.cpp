@@ -1292,6 +1292,7 @@ void Utils::TransformDetectedObjects(const std::vector<DetectedObjectPtr>& detec
 std::string MujinVisionManager::_GetString(const Transform& transform)
 {
     std::stringstream ss;
+    ss << std::setprecision(std::numeric_limits<Real>::digits10+1);
     TransformMatrix t(transform);
     for (unsigned int r = 0; r < 3; ++r) {
         for (unsigned int c = 0; c < 3; ++c) {

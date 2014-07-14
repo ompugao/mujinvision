@@ -34,10 +34,13 @@ using namespace mujinclient;
 class MUJINVISION_API MujinVisionManager
 {
 public:
+    /** \brief sets up vision manager
+        - loads config file
+     */    
     MujinVisionManager(ImageSubscriberManagerPtr imagesubscribermanager, DetectorManagerPtr detectormanager, const std::string& visionmanagerConfigurationFilename);
     virtual ~MujinVisionManager();
 
-    void Destroy();
+    virtual void Destroy();
 
     /// \brief vision server parameters
     struct MUJINVISION_API VisionServerParameters : public ParametersBase
@@ -161,52 +164,89 @@ public:
     typedef boost::shared_ptr<CommandServer const> CommandServerConstPtr;
     typedef boost::weak_ptr<CommandServer> CommandServerWeakPtr;
 
-    ptree Initialize(const std::string& detectorConfigurationFilename, ///< object model, detection parameters
-                     const std::string& imagesubscriberConfigurationFilename, ///< subscriber parameters
-                     const std::string& controllerIp,
-                     const unsigned int controllerPort,
-                     const std::string& controllerUsernamePass,
-                     const std::string& robotControllerIp,
-                     const unsigned int robotControllerPort,
-                     const unsigned int binpickingTaskZmqPort,
-                     const unsigned int binpickingTaskHeartbeatPort,
-                     const double binpickingTaskHeartbeatTimeout,
-                     const std::string& binpickingTaskScenePk,
-                     const std::string& robotname,
-                     const std::string& regionname
-                     );
+    /** \brief preparation for the detection process
+        - load object.conf
+        - subscribe to image streams
+        - connect to the mujin controller
+        - initialize detection
+     */
+    virtual ptree Initialize(const std::string& detectorConfigurationFilename, ///< object model, detection parameters
+                             const std::string& imagesubscriberConfigurationFilename, ///< subscriber parameters
+                             const std::string& controllerIp,
+                             const unsigned int controllerPort,
+                             const std::string& controllerUsernamePass,
+                             const std::string& robotControllerIp,
+                             const unsigned int robotControllerPort,
+                             const unsigned int binpickingTaskZmqPort,
+                             const unsigned int binpickingTaskHeartbeatPort,
+                             const double binpickingTaskHeartbeatTimeout,
+                             const std::string& binpickingTaskScenePk,
+                             const std::string& robotname,
+                             const std::string& regionname
+                             );
 
-    ptree DetectObjects(const std::string& regionname,
-                        const std::vector<std::string>& cameranames,
-                        std::vector<DetectedObjectPtr>& detectedobjectsworld);
+    /** \brief Detects objects in specified region with specified cameras
+        \param regionname name of the region
+        \param cameranames names of the cameras
+        \param detectedobjects detection results in meters in world frame
+     */
+    virtual ptree DetectObjects(const std::string& regionname,
+                                const std::vector<std::string>& cameranames,
+                                std::vector<DetectedObjectPtr>& detectedobjectsworld);
 
-    ptree StartDetectionLoop(const std::string& regionname,
-                             const std::vector<std::string>& cameranames,
-                             const double voxelsize=0.01,
-                             const double pointsize=0.005);
+    /** \brief starts detection thread to continuously detect objects and sends detection results to mujin controller
+     */
+    virtual ptree StartDetectionLoop(const std::string& regionname,
+                                     const std::vector<std::string>& cameranames,
+                                     const double voxelsize=0.01,
+                                     const double pointsize=0.005);
 
-    ptree StopDetectionLoop();
+    virtual ptree StopDetectionLoop();
 
-    ptree SendPointCloudObstacleToController(const std::string& regionname,
-                                             const std::vector<std::string>& cameranames,
-                                             const std::vector<DetectedObjectPtr>& detectedobjectsworld,
-                                             const double voxelsize=0.01,
-                                             const double pointsize=0.005);
+    /** \brief Updates the point cloud obstacle and sends it to mujin controller
+        \param regionname name of the region where the detection happens
+        \param cameranames names of the cameras used for detection
+        \param detectedobjects detection result in meters in  world frame
+        \param voxelsize size of the voxel grid in meters used for simplifying the cloud
+        \param pointsize size of the point in meters to be sent to the mujin controller
+     */
+    virtual ptree SendPointCloudObstacleToController(const std::string& regionname,
+                                                     const std::vector<std::string>& cameranames,
+                                                     const std::vector<DetectedObjectPtr>& detectedobjectsworld,
+                                                     const double voxelsize=0.01,
+                                                     const double pointsize=0.005);
 
-    ptree VisualizePointCloudOnController(const std::string& regionname,
-                                          const std::vector<std::string>& cameranames,
-                                          const double pointsize=0.005);
+    /** \brief Visualizes the raw camera point clouds on mujin controller
+     */
+    virtual ptree VisualizePointCloudOnController(const std::string& regionname,
+                                                  const std::vector<std::string>& cameranames,
+                                                  const double pointsize=0.005);
 
-    ptree ClearVisualizationOnController();
+    /** \brief Clears visualization made by VisualizePointCloudOnController on mujin controller.
+     */
+    virtual ptree ClearVisualizationOnController();
 
-    ptree SaveSnapshot(const std::string& regionname, const bool getlatest=true);
+    /** \brief Saves a snapshot for each sensor mapped to the region. If detection was called before, snapshots of the images used for the last detection will be saved. Images are saved to the visionmanager application directory.
+     */
+    virtual ptree SaveSnapshot(const std::string& regionname, const bool getlatest=true);
 
-    ptree UpdateDetectedObjects(const std::vector<DetectedObjectPtr>& detectobjectsworld, const bool sendtocontroller=false);
+    /** \brief Updates the locally maintained list of the detected objects
+        \param detectedobjectsworld detection result in world frame
+        \param sendtocontroller whether to send the list to mujin controller
+     */
+    virtual ptree UpdateDetectedObjects(const std::vector<DetectedObjectPtr>& detectobjectsworld, const bool sendtocontroller=false);
 
-    ptree SyncRegion(const std::string& regionname);
+    /** \brief Updates the region info from the mujin controller
+        - updates position of the region
+        - updates globalroi3d of the region
+     */
+    virtual ptree SyncRegion(const std::string& regionname);
 
-    ptree SyncCameras(const std::string& regionname,
-                      const std::vector<std::string>& cameranames);
+    /** \brief Updates info about the cameras associated with the region from the mujin controller. If no cameraname is provided, then update all cameras mapped to the region.
+        - updates positions of the cameras
+     */
+    virtual ptree SyncCameras(const std::string& regionname,
+                              const std::vector<std::string>& cameranames);
 
     bool bShutdown;
 
