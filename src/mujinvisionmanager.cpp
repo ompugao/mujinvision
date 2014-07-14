@@ -863,7 +863,7 @@ ColorImagePtr MujinVisionManager::_GetColorImage(const std::string& regionname, 
     ColorImagePtr colorimage;
     unsigned long long timestamp;
     bool isoccluding;
-    while (!_bCancelCommand && !bShutdown) {
+    while (!_bCancelCommand && !bShutdown && !_bStopDetectionThread) {
         colorimage = _pImagesubscriberManager->GetColorImage(cameraname,timestamp);
         if (!colorimage) {
             std::cerr << "[WARN]: Could not get color image for camera: " << cameraname << ", wait for 1 more second." << std::endl;
@@ -886,7 +886,7 @@ DepthImagePtr MujinVisionManager::_GetDepthImage(const std::string& regionname, 
     DepthImagePtr depthimage;
     unsigned long long starttime, endtime;
     bool isoccluding;
-    while (!_bCancelCommand && !bShutdown) {
+    while (!_bCancelCommand && !bShutdown && !_bStopDetectionThread) {
         depthimage = _pImagesubscriberManager->GetDepthImage(cameraname, _numDepthImagesToAverage, starttime, endtime);
         if (!depthimage) {
             std::cerr << "could not get depth image for camera: " << cameraname << ", wait for 1 more second" << std::endl;
