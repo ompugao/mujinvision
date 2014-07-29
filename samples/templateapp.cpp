@@ -1,4 +1,4 @@
-#include <mujinvision/visionmanagerimpl.h>
+#include <mujinvision/mujinvisionmanager.h>
 
 using namespace mujinvision;
 
