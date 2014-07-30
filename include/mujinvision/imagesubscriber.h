@@ -38,27 +38,27 @@ public:
     }
 
     /// \brief User-defined subscriber parameters.
-    class MUJINVISION_API SubscriberParameters;
+    //class MUJINVISION_API SubscriberParameters;
 
-    virtual void StartCaptureThread() = 0;
+    //virtual void StartCaptureThread() = 0;
 
-    virtual void StopCaptureThread() = 0;
+    //virtual void StopCaptureThread() = 0;
 
     /** \brief Gets images from the latest message. Blocks until one message is processed. Note that one message may contain multiple images.
         \param outimages result images will be pushed back onto this vector
      */
-    virtual void GetImagesFromMessage(std::vector<ImagePtr>& outimages) = 0;
+    //virtual void GetImagesFromMessage(std::vector<ImagePtr>& outimages) = 0;
 
     /** \brief Gets images from the last n consecutive messages. Blocks until n messages are processed. Note that one message may contain multiple images.
         \param n number of the desired last consecutive messages
         \param outimages vector to which the result images will be pushed
      */
-    virtual void GetImagesFromConsecutiveMessages(const unsigned int n, std::vector<ImagePtr>& outimages) = 0;
+    //virtual void GetImagesFromConsecutiveMessages(const unsigned int n, std::vector<ImagePtr>& outimages) = 0;
 
     /** \brief Loads image subscriber parameters.
         \param pt boost property tree defining the image subscriber parameters
      */
-    virtual void LoadParameters(const ptree& pt) = 0;
+    //virtual void LoadParameters(const ptree& pt) = 0;
 
     /** \brief Gets n images of specified type from buffered messages. Should not block for new messages because some subscribers might not provide images of the desired image type.
         \param cameraid id of the camera
@@ -66,7 +66,7 @@ public:
         \param n number of desired images
         \param outimages vector to which the result images will be pushed
      */
-    virtual void GetSpecificImages(const std::string& cameraid, ImageType imagetype, const unsigned int n, std::vector<ImagePtr>& outimages) = 0;
+    //virtual void GetSpecificImages(const std::string& cameraid, ImageType imagetype, const unsigned int n, std::vector<ImagePtr>& outimages) = 0;
 
 };
 

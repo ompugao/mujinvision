@@ -25,25 +25,8 @@ public:
     }
     virtual ~UserImageSubscriber() {
     }
-
-    void StartCaptureThread() {
-    }
-
-    void StopCaptureThread() {
-    }
-
-    void GetImagesFromMessage(std::vector<ImagePtr>& outimages) {
-    }
-
-    void GetImagesFromConsecutiveMessages(const unsigned int n, std::vector<ImagePtr>& outimages) {
-    }
-
-    void LoadParameters(const ptree& pt) {
-    }
-
-    void GetSpecificImages(const std::string& cameraid, ImageType imagetype, const unsigned int n, std::vector<ImagePtr>& outimages) {
-    }
 };
+
 typedef boost::shared_ptr<UserImageSubscriber> UserImageSubscriberPtr;
 
 class UserImageSubscriberManager : public ImageSubscriberManager

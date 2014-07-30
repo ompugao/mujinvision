@@ -27,6 +27,7 @@
 
 #include "geometry.h"
 #include "visionexceptions.h"
+#include "picojson.h"
 
 #include <time.h>
 
@@ -523,9 +524,21 @@ struct MUJINVISION_API DetectedObject : public ParametersBase
             i++;
         }
         i=0;
-        FOREACH(v, pt.get_child("quat_")) {
-            transform.rot[i] = boost::lexical_cast<double>(v->second.data());
-            i++;
+        boost::optional< const boost::property_tree::ptree& > optchild;
+        optchild = pt.get_child_optional( "quat_" );
+        if (!!optchild) {
+            FOREACH(v, pt.get_child("quat_")) {
+                transform.rot[i] = boost::lexical_cast<double>(v->second.data());
+                i++;
+            }
+        }
+        i=0;
+        optchild = pt.get_child_optional( "dir_" );
+        if (!!optchild) {
+            FOREACH(v, pt.get_child("dir_")) {
+                transform.rot[i] = boost::lexical_cast<double>(v->second.data());
+                i++;
+            }
         }
         confidence = pt.get<double>("confidence");
     }
@@ -550,6 +563,7 @@ struct MUJINVISION_API DetectedObject : public ParametersBase
         std::stringstream ss;
         ss << std::setprecision(std::numeric_limits<double>::digits10+1);
         //"{\"name\": \"obj\",\"translation_\":[100,200,300],\"quat_\":[1,0,0,0],\"confidence\":0.5}"
+        /*
         ss << "{";
         ss << "\"name\": \"" << name << "\", ";
         ss << "\"translation_\": [";
@@ -570,6 +584,7 @@ struct MUJINVISION_API DetectedObject : public ParametersBase
         ss << "], ";
         ss << "\"confidence\": " << confidence;
         ss << "}";
+        */
         return ss.str();
     }
 
