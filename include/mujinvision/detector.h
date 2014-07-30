@@ -88,6 +88,18 @@ public:
      */
     virtual void SetColorImage(const std::string& colorcameraname, ColorImageConstPtr colorimage, const unsigned int minu, const unsigned int maxu, const unsigned int minv, const unsigned int maxv) = 0;
 
+    virtual void SetDepthImage(const std::string& depthcameraname, DepthImagePtr depthimage) {
+        mMergedDepthImage[depthcameraname] = depthimage;
+    }
+
+    virtual DepthImagePtr GetDepthImage(const std::string& depthcameraname) {
+        return mMergedDepthImage[depthcameraname];
+    }
+
+    virtual bool DepthImageIsSet(const std::string& depthcameraname) {
+        return !!mMergedDepthImage[depthcameraname];
+    }
+
     std::map<std::string, ColorImagePtr> mColorImage; ///< cameraname -> image
     std::map<std::string, DepthImagePtr> mMergedDepthImage; ///< cameraname -> image
     std::map<std::string, std::vector<DepthImagePtr > > mDepthImages; ///< cameraname -> images

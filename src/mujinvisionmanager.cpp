@@ -1054,7 +1054,7 @@ ptree MujinVisionManager::DetectObjects(const std::string& regionname, const std
     ColorImagePtr originalcolorimage = _GetColorImage(regionname, colorcameraname);
     DepthImagePtr depthimage = _GetDepthImage(regionname, depthcameraname);
     _pDetector->SetColorImage(colorcameraname, originalcolorimage, colorcamera->pCameraParameters->minu, colorcamera->pCameraParameters->maxu, colorcamera->pCameraParameters->minv, colorcamera->pCameraParameters->maxv);
-    _pDetector->mMergedDepthImage[depthcameraname] = depthimage;
+    _pDetector->SetDepthImage(depthcameraname, depthimage);
 
     // detect objects
     _pDetector->DetectObjects(colorcameraname, depthcameraname, detectedobjects);
@@ -1144,10 +1144,10 @@ ptree MujinVisionManager::SaveSnapshot(const std::string& regionname, const bool
             std::stringstream filename_ss;
             filename_ss << depthcameraname << "_" << GetMilliTime() << ".pcd";
             DepthImagePtr depthimage;
-            if (getlatest || !_pDetector->mMergedDepthImage[depthcameraname]) {
+            if (getlatest || !_pDetector->DepthImageIsSet(depthcameraname)) {
                 depthimage = _GetDepthImage(regionname, depthcameraname);
             } else {
-                depthimage = _pDetector->mMergedDepthImage[depthcameraname];
+                depthimage = _pDetector->GetDepthImage(depthcameraname);
             }
             _pImagesubscriberManager->WriteDepthImage(depthimage, filename_ss.str());
         }
